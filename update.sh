@@ -25,7 +25,7 @@ rm "$LIB"/*.jar
 echo "🔸 Copying bundles."
 cp "$BUNDLE"/argonaut_2.11*.jar "$LIB"
 cp "$BUNDLE"/edu-gemini-itc-shared_2.11*.jar "$LIB"
-cp "$BUNDLE"/edu-gemini-itc-web_2.11*.jar "$LIB"
+# cp "$BUNDLE"/edu-gemini-itc-web_2.11*.jar "$LIB"
 cp "$BUNDLE"/edu-gemini-itc_2.11*.jar "$LIB"
 cp "$BUNDLE"/edu-gemini-json_2.11*.jar "$LIB"
 cp "$BUNDLE"/edu-gemini-pot_2.11*.jar "$LIB"

@@ -1,29 +1,42 @@
-package itc
+package lucuma.itc
 
-import edu.gemini.itc.web.servlets.JsonServlet
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.servlet.ServletHandler
+import cats.effect._
+import cats.syntax.all._
+import fs2._
+import org.http4s.implicits._
+import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.server.middleware.Logger
+import org.http4s.server.staticcontent._
+import scala.concurrent.ExecutionContext.global
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-object Main {
+object Main extends IOApp {
+  def run(args: List[String]) =
+    for {
+      cfg <- Config.fromCiris.load(Async[IO])
+      log <- Slf4jLogger.create[IO]
+      _ <- ItcServer.stream[IO].compile.drain
+    } yield ExitCode.Success
+}
 
-  def main(args: Array[String]): Unit = {
+object ItcServer {
+  def stream[F[_]: Async]: Stream[F, Nothing] = {
+    val itcService = ItcService.service[F]
 
-    // Let's not connect to the window server
-    System.setProperty("java.awt.headless", "true")
+    val httpApp0 = (
+      // Routes for static resources, ie. GraphQL Playground
+      resourceServiceBuilder[F]("/assets").toRoutes <+>
+        ItcService.routes[F](itcService)
+      ).orNotFound
 
-    // Construct a server on `PORT` or 8080 if not provided
-    val port    = sys.env.get("PORT").fold(8080)(_.toInt)
-    val server  = new Server(port)
-    val handler = new ServletHandler()
+    val httpApp = Logger.httpApp(true, false)(httpApp0)
 
-    // Set up our handler
-    handler.addServletWithMapping(classOf[JsonServlet], "/json")
-
-    // And start our server
-    server.setHandler(handler)
-    server.start()
-    server.join()
-
-  }
-
+    // Spin up the server ...
+    for {
+      exitCode <- BlazeServerBuilder[F](global)
+        .bindHttp(8080, "0.0.0.0")
+        .withHttpApp(httpApp)
+        .serve
+    } yield exitCode
+  }.drain
 }

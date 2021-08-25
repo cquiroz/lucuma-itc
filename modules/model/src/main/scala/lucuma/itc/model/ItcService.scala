@@ -1,6 +1,6 @@
 package lucuma.itc.model
 
-// import edu.gemini.spModel.core.Peer
+import edu.gemini.itc.shared.TelescopeDetails
 // import edu.gemini.util.trpc.client.TrpcClient
 // import scala.swing.Color
 
@@ -280,7 +280,7 @@ final case class ItcError(msg: String) extends ItcMessage
 final case class ItcWarning(msg: String) extends ItcMessage
 
 case class ItcParameters(
-    // source: SourceDefinition,
+    source: SourceDefinition
     // observation: ObservationDetails,
     // conditions: ObservingConditions,
     // telescope: TelescopeDetails,
