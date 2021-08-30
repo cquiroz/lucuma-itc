@@ -291,9 +291,6 @@ object ItcService {
 
   type Result = Either[ItcError, ItcResult]
 
-  def apply(): ItcService = new ItcService {
-    def calculate(p: ItcParameters, headless: Boolean): Result = ???
-  }
   /** Performs an ITC call on the given host. */
   // def calculate(peer: Peer, inputs: ItcParameters): Future[Result] =
   //   TrpcClient(peer).withoutKeys future { r =>

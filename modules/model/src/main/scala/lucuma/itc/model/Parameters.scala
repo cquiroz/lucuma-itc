@@ -1,14 +1,8 @@
 package lucuma.itc.model
 
-// import edu.gemini.spModel.core.{
-//   // SpectralDistribution,
-//   // UniformSource,
-//   // SpatialProfile,
-//   // BrightnessUnit,
-// }
-import edu.gemini.spModel.gemini.obscomp.SPSiteQuality.{
+import lucuma.core.enum.{
   WaterVapor,
-  CloudCover,
+  CloudExtinction,
   SkyBackground,
   ImageQuality
 }
@@ -20,7 +14,7 @@ import lucuma.core.model.SpatialProfile
 
 final case class ObservingConditions(
     iq: ImageQuality,
-    cc: CloudCover,
+    ce: CloudExtinction,
     wv: WaterVapor,
     sb: SkyBackground,
     airmass: Double
@@ -132,9 +126,9 @@ final case class ObservationDetails(
     calculationMethod: CalculationMethod,
     analysisMethod: AnalysisMethod
 ) {
-  def exposureTime: Double = calculationMethod.exposureTime
-  def coadds: Option[Int] = calculationMethod.coadds
-  def sourceFraction: Double = calculationMethod.sourceFraction
-  def offset: Double = calculationMethod.offset
+  // def exposureTime: Double = calculationMethod.exposureTime
+  // def coadds: Option[Int] = calculationMethod.coadds
+  // def sourceFraction: Double = calculationMethod.sourceFraction
+  // def offset: Double = calculationMethod.offset
   def isAutoAperture: Boolean = analysisMethod.isInstanceOf[AutoAperture]
 }
