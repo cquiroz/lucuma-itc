@@ -1,7 +1,10 @@
 package lucuma.itc.operation
 
 import lucuma.itc.base.{SampledSpectrumVisitor, ZeroMagnitudeStar, VisitableSampledSpectrum, DefaultSampledSpectrum}
-import edu.gemini.spModel.core._
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.MagnitudeSystem
+import lucuma.core.math.Redshift
+// import edu.gemini.spModel.core._
 
 /**
  * This class creates a black body spectrum over the interval defined by the
@@ -17,19 +20,19 @@ final class BlackBodySpectrum(spectrum: DefaultSampledSpectrum) extends Visitabl
     new BlackBodySpectrum(clonedSpectrum)
   }
 
-  def trim(startWavelength: Double, endWavelength: Double) {
+  def trim(startWavelength: Double, endWavelength: Double): Unit = {
     spectrum.trim(startWavelength, endWavelength)
   }
 
-  def reset(s: Array[Double], v: Double, r: Double) {
+  def reset(s: Array[Double], v: Double, r: Double): Unit = {
     spectrum.reset(s, v, r)
   }
 
-  def applyWavelengthCorrection() {
+  def applyWavelengthCorrection(): Unit = {
     spectrum.applyWavelengthCorrection()
   }
 
-  def accept(v: SampledSpectrumVisitor) {
+  def accept(v: SampledSpectrumVisitor): Unit = {
     spectrum.accept(v)
   }
 
@@ -91,25 +94,25 @@ final class BlackBodySpectrum(spectrum: DefaultSampledSpectrum) extends Visitabl
    * Sets y value in specified x bin.
    * If specified bin is out of range, this is a no-op.
    */
-  def setY(bin: Int, y: Double) {
+  def setY(bin: Int, y: Double): Unit = {
     spectrum.setY(bin, y)
   }
 
   /**
    * Rescales X axis by specified factor. Doesn't change sampling size.
    */
-  def rescaleX(factor: Double) {
+  def rescaleX(factor: Double): Unit =  {
     spectrum.rescaleX(factor)
   }
 
   /**
    * Rescales Y axis by specified factor.
    */
-  def rescaleY(factor: Double) {
+  def rescaleY(factor: Double): Unit = {
     spectrum.rescaleY(factor)
   }
 
-  def smoothY(factor: Int) {
+  def smoothY(factor: Int): Unit = {
     spectrum.smoothY(factor)
   }
 
@@ -160,12 +163,12 @@ final class BlackBodySpectrum(spectrum: DefaultSampledSpectrum) extends Visitabl
 
 object BlackBodySpectrum {
 
-  def apply(temp: Double, interval: Double, flux: Double, units: BrightnessUnit, band: MagnitudeBand, redshift: Redshift) = {
+  def apply(temp: Double, interval: Double, flux: Double, units: MagnitudeSystem, band: MagnitudeBand, redshift: Redshift) = {
 
     //rescale the start and end depending on the redshift
     val z         = redshift.z
-    val start     =   300 / (1 + z)
-    val end       = 30000 / (1 + z)
+    val start     =   300 / (1 + z.toDouble)
+    val end       = 30000 / (1 + z.toDouble)
     val n         = ((end - start) / interval + 1).toInt
     val fluxArray = new Array[Double](n + 40)
 
@@ -175,7 +178,8 @@ object BlackBodySpectrum {
     var i = 0
     var wavelength = start
     while (wavelength <= end) {
-      fluxArray(i) = blackbodyFlux(wavelength, temp)
+      // FIXME use big decimal arithmetics
+      fluxArray(i) = blackbodyFlux(wavelength.toDouble, temp)
       i = i + 1
       wavelength += interval
     }
@@ -185,12 +189,12 @@ object BlackBodySpectrum {
     //with blackbody convert W m^2 um^-1 to phot....
     val zeropoint = ZeroMagnitudeStar.getAverageFlux(band)
     val phot_norm = zeropoint * Math.pow(10.0, -0.4 * magFlux)
-    val average   = spectrum.getAverage(band.start.toNanometers / (1 + z), band.end.toNanometers / (1 + z))
+    val average   = spectrum.getAverage(band.start.nanometer.value.toDouble / (1 + z.toDouble), band.end.nanometer.value.toDouble / (1 + z.toDouble))
 
     // Calculate multiplier.
     val multiplier = phot_norm / average
     spectrum.rescaleY(multiplier)
-    
+
     new BlackBodySpectrum(spectrum)
 
   }
@@ -198,34 +202,34 @@ object BlackBodySpectrum {
   private def blackbodyFlux(lambda: Double, temp: Double): Double =
     (1 / Math.pow(lambda / 1000, 4)) * (1 / (Math.exp(14387 / (lambda / 1000 * temp)) - 1))
 
-  private def convertToMag(flux: Double, units: BrightnessUnit, band: MagnitudeBand): Double = {
+  private def convertToMag(flux: Double, units: MagnitudeSystem, band: MagnitudeBand): Double = {
     //THis method should convert the flux into units of magnitude.
     //same code as in NormalizeVisitor.java.  Eventually should come out
     // into a genral purpose conversion class if needs to be used again.
 
     def convert(norm: Double) = {
-      val zeropoint: Double = ZeroMagnitudeStar.getAverageFlux(band)
+      val zeropoint: Double = ZeroMagnitudeStar.getAverageFlux(band).toDouble
       -(Math.log(norm / zeropoint) / Math.log(10)) / .4
     }
 
     units match {
-      case MagnitudeSystem.Vega | SurfaceBrightness.Vega =>
+      case MagnitudeSystem.Vega =>//| SurfaceBrightness.Vega =>
         flux // this is already mag
 
-      case MagnitudeSystem.AB | SurfaceBrightness.AB =>
-        convert(5.632e10 * Math.pow(10, -0.4 * flux) / band.center.toNanometers)
+      case MagnitudeSystem.AB => //| SurfaceBrightness.AB =>
+        convert(5.632e10 * Math.pow(10, -0.4 * flux) / band.center.nanometer.value.toDouble)
 
-      case MagnitudeSystem.Jy | SurfaceBrightness.Jy =>
-        convert(flux * 1.509e7 / band.center.toNanometers)
+      case MagnitudeSystem.Jy =>//| SurfaceBrightness.Jy =>
+        convert(flux * 1.509e7 / band.center.nanometer.value.toDouble)
 
-      case MagnitudeSystem.Watts | SurfaceBrightness.Watts =>
-        convert(flux * band.center.toNanometers / 1.988e-13)
+      case MagnitudeSystem.Watts =>//| SurfaceBrightness.Watts =>
+        convert(flux * band.center.nanometer.value.toDouble / 1.988e-13)
 
-      case MagnitudeSystem.ErgsWavelength | SurfaceBrightness.ErgsWavelength =>
-        convert(flux * band.center.toNanometers / 1.988e-14)
+      case MagnitudeSystem.ErgsWavelength =>//| SurfaceBrightness.ErgsWavelength =>
+        convert(flux * band.center.nanometer.value.toDouble / 1.988e-14)
 
-      case MagnitudeSystem.ErgsFrequency | SurfaceBrightness.ErgsFrequency =>
-        convert(flux * 1.509e30 / band.center.toNanometers)
+      case MagnitudeSystem.ErgsFrequency =>//| SurfaceBrightness.ErgsFrequency =>
+        convert(flux * 1.509e30 / band.center.nanometer.value.toDouble)
 
     }
 

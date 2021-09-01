@@ -1,15 +1,16 @@
 package lucuma.itc.service
 
 // import edu.gemini.auxfile.client.AuxFileClient
-import edu.gemini.itc.acqcam.AcqCamRecipe
-import edu.gemini.itc.base._
-import edu.gemini.itc.flamingos2.Flamingos2Recipe
-import edu.gemini.itc.gmos.GmosRecipe
-import edu.gemini.itc.gnirs.GnirsRecipe
-import edu.gemini.itc.gsaoi.GsaoiRecipe
-import edu.gemini.itc.nifs.NifsRecipe
-import edu.gemini.itc.niri.NiriRecipe
-import edu.gemini.itc.shared._
+// import edu.gemini.itc.acqcam.AcqCamRecipe
+// import edu.gemini.itc.base._
+// import edu.gemini.itc.flamingos2.Flamingos2Recipe
+import lucuma.itc.gmos.GmosRecipe
+// import edu.gemini.itc.gnirs.GnirsRecipe
+// import edu.gemini.itc.gsaoi.GsaoiRecipe
+// import edu.gemini.itc.nifs.NifsRecipe
+// import edu.gemini.itc.niri.NiriRecipe
+// // import edu.gemini.itc.shared._
+import lucuma.itc.model._
 // import edu.gemini.spModel.core.{AuxFileSpectrum, UserDefinedSpectrum, SpectralDistribution, SPProgramID}
 
 // import scalaz._
@@ -64,14 +65,14 @@ class ItcServiceImpl extends ItcService {
 
   private def calculateImaging(p: ItcParameters): Result =
     p.instrument match {
-      case _: MichelleParameters          => ItcResult.forMessage ("Imaging not implemented.")
-      case _: TRecsParameters             => ItcResult.forMessage ("Imaging not implemented.")
-      case i: AcquisitionCamParameters    => imagingResult        (new AcqCamRecipe(p, i))
-      case i: Flamingos2Parameters        => imagingResult        (new Flamingos2Recipe(p, i))
-      case i: GmosParameters              => imagingResult        (new GmosRecipe(p, i))
-      case i: GsaoiParameters             => imagingResult        (new GsaoiRecipe(p, i))
-      case i: NiriParameters              => imagingResult        (new NiriRecipe(p, i))
-      case i: GnirsParameters             => imagingResult        (new GnirsRecipe(p, i))
+      // case _: MichelleParameters          => ItcResult.forMessage ("Imaging not implemented.")
+      // case _: TRecsParameters             => ItcResult.forMessage ("Imaging not implemented.")
+      // case i: AcquisitionCamParameters    => imagingResult        (new AcqCamRecipe(p, i))
+      // case i: Flamingos2Parameters        => imagingResult        (new Flamingos2Recipe(p, i))
+      // case i: GmosParameters              => imagingResult        (new GmosRecipe(p, i))
+      // case i: GsaoiParameters             => imagingResult        (new GsaoiRecipe(p, i))
+      // case i: NiriParameters              => imagingResult        (new NiriRecipe(p, i))
+      // case i: GnirsParameters             => imagingResult        (new GnirsRecipe(p, i))
       case _                              => ItcResult.forMessage ("Imaging with this instrument is not supported by ITC.")
     }
 
@@ -92,13 +93,13 @@ class ItcServiceImpl extends ItcService {
 
   private def calculateSpectroscopy(p: ItcParameters, headless: Boolean): Result =
     p.instrument match {
-      case _: MichelleParameters          => ItcResult.forMessage ("Spectroscopy not implemented.")
-      case _: TRecsParameters             => ItcResult.forMessage ("Spectroscopy not implemented.")
-      case i: Flamingos2Parameters        => spectroscopyResult   (new Flamingos2Recipe(p, i), headless )
-      case i: GmosParameters              => spectroscopyResult   (new GmosRecipe(p, i),       headless )
-      case i: GnirsParameters             => spectroscopyResult   (new GnirsRecipe(p, i),      headless )
-      case i: NifsParameters              => spectroscopyResult   (new NifsRecipe(p, i),       headless )
-      case i: NiriParameters              => spectroscopyResult   (new NiriRecipe(p, i),       headless )
+      // case _: MichelleParameters          => ItcResult.forMessage ("Spectroscopy not implemented.")
+      // case _: TRecsParameters             => ItcResult.forMessage ("Spectroscopy not implemented.")
+      // case i: Flamingos2Parameters        => spectroscopyResult   (new Flamingos2Recipe(p, i), headless )
+      // case i: GmosParameters              => spectroscopyResult   (new GmosRecipe(p, i),       headless )
+      // case i: GnirsParameters             => spectroscopyResult   (new GnirsRecipe(p, i),      headless )
+      // case i: NifsParameters              => spectroscopyResult   (new NifsRecipe(p, i),       headless )
+      // case i: NiriParameters              => spectroscopyResult   (new NiriRecipe(p, i),       headless )
       case _                              => ItcResult.forMessage ("Spectroscopy with this instrument is not supported by ITC.")
 
     }

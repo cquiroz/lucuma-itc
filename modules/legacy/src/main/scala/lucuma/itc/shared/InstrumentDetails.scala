@@ -1,4 +1,4 @@
-package lucuma.itc.model
+package lucuma.itc.shared
 
 // import edu.gemini.spModel.core.{Wavelength, Site}
 // import edu.gemini.spModel.data.YesNoType

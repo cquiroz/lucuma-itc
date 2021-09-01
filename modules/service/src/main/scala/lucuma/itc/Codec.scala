@@ -159,4 +159,5 @@ trait ItcParametersCodec {
     deriveDecoder[ItcParameters]
 }
 
+object Codec extends ItcParametersCodec
 // #service

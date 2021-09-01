@@ -8,7 +8,7 @@ val http4sVersion = "0.23.0-RC1"
 val kindProjectorVersion = "0.13.0"
 val log4catsVersion = "2.1.1"
 val logbackVersion = "1.2.5"
-val lucumaCoreVersion = "0.12.4+2-e19118b2-SNAPSHOT"
+val lucumaCoreVersion = "0.12.4+14-b541d3ef-SNAPSHOT"
 val coulombVersion        = "0.5.6"
 
 ThisBuild / Test / bspEnabled := false
@@ -50,7 +50,7 @@ scalaVersion := "3.0.1"
 
 lazy val service = project
   .in(file("modules/service"))
-  .dependsOn(model)
+  .dependsOn(model, itc)
   // .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   // .settings(testkitLibSettings: _*)
@@ -68,6 +68,10 @@ lazy val service = project
     )
   )
 
+lazy val legacy = project
+  .in(file("modules/legacy"))
+  .settings(commonLibSettings: _*)
+
 lazy val model = project
   .in(file("modules/model"))
   // .dependsOn(model)
@@ -76,6 +80,15 @@ lazy val model = project
 // .settings(testkitLibSettings: _*)
 // .jsSettings(commonModuleTest: _*)
 // .jvmSettings(commonJVMSettings)
+
+lazy val itc = project
+  .in(file("modules/itc"))
+  .dependsOn(model)
+  // .settings(commonSettings: _*)
+  .settings(commonLibSettings: _*)
+  // .settings(testkitLibSettings: _*)
+  // .jsSettings(commonModuleTest: _*)
+  // .jvmSettings(commonJVMSettings)
 
 lazy val commonLibSettings = Seq(
   libraryDependencies ++= Seq(

@@ -3,14 +3,17 @@ package lucuma.itc
 import cats.effect._
 import cats.syntax.all._
 import fs2._
+import org.http4s._
+import org.http4s.dsl._
 import org.http4s.implicits._
+import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.blaze.server.BlazeServerBuilder
-import org.http4s.server.middleware.Logger
+import org.http4s.server.middleware
 import org.http4s.server.staticcontent._
 import scala.concurrent.ExecutionContext.global
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import org.typelevel.log4cats.{Logger => CatsLogger}
-import lucuma.itc.model.ItcService
+import org.typelevel.log4cats.Logger
+import lucuma.itc.model._
 
 object Main extends IOApp {
   def run(args: List[String]) =
@@ -22,6 +25,8 @@ object Main extends IOApp {
 }
 
 object ItcServer {
+  import Codec._
+
   def routes[F[_]: Logger: Concurrent](service: ItcService): HttpRoutes[F] = {
     val dsl = new Http4sDsl[F] {}
     import dsl._
@@ -64,8 +69,8 @@ object ItcServer {
     }
   }
   //
-  def stream[F[_]: CatsLogger: Async]: Stream[F, Nothing] = {
-    val itcService = ItcService
+  def stream[F[_]: Logger: Async]: Stream[F, Nothing] = {
+    val itcService = ItcService()
 
     val httpApp0 = (
       // Routes for static resources, ie. GraphQL Playground
@@ -73,7 +78,7 @@ object ItcServer {
         routes[F](itcService)
       ).orNotFound
 
-    val httpApp = Logger.httpApp(true, false)(httpApp0)
+    val httpApp = middleware.Logger.httpApp(true, false)(httpApp0)
 
     // Spin up the server ...
     for {

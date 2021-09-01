@@ -4,6 +4,7 @@
 package lucuma.itc.model.syntax
 
 import lucuma.core.enum.Instrument
+import lucuma.itc.model._
 import scala.concurrent.duration._
 
 final class InstrumentOps(val self: Instrument) extends AnyVal {
@@ -35,8 +36,8 @@ final class InstrumentOps(val self: Instrument) extends AnyVal {
   def gain: Double = 0
   def wellDepth: Double = 0
   def warnings: List[WarningRule] = Nil
-  def imagingWarnings(result: ImagingResult): List[WarningRule] = Nil
-  def spectroscopyWarnings(result: SpectroscopyResult): List[WarningRule] = Nil
+  def imagingWarnings(result: ImagingResult): List[ItcWarning] = Nil
+  def spectroscopyWarnings(result: SpectroscopyResult): List[ItcWarning] = Nil
 }
 
 trait ToInstrumentOps {
