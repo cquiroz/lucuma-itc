@@ -27,18 +27,18 @@ public class DetectorsTransmissionVisitor implements SampledSpectrumVisitor {
 
     public DetectorsTransmissionVisitor(final GmosParameters p, final double nmppx, final String filename) {
         this.spectralBinning    = p.spectralBinning();
-        this.centralWavelength  = p.centralWavelength().toNanometers();
+        this.centralWavelength  = p.centralWavelength().nanometer().toDouble();
         this.nmppx              = nmppx;
         this.rulingDensity      = p.grating().rulingDensity();
         final double[][] data   = DatFile.arrays().apply(filename);
-        this.ccdType = p.ccdType();
+        this.ccdType = p.legacyCcdType();
 
-        switch (p.ccdType()) {
+        switch (p.legacyCcdType()) {
             case E2V:
                 this.gapSizePix = 37;
                 break;
             case HAMAMATSU:
-                switch (p.site()) {
+                switch (p.legacySite()) {
                     case GN:
                         this.gapSizePix = 67;
                         break;

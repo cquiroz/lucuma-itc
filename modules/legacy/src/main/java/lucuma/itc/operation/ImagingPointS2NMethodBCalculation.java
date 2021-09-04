@@ -33,7 +33,7 @@ public final class ImagingPointS2NMethodBCalculation extends ImagingS2NCalculati
                 (signal + noiseFactor * sourceless_noise * sourceless_noise) / coadds;
 
         int_req_source_exposures =
-                new Double(Math.ceil(req_source_exposures)).intValue();
+                Double.valueOf(Math.ceil(req_source_exposures)).intValue();
 
         req_number_exposures =
                 int_req_source_exposures / frac_with_source;

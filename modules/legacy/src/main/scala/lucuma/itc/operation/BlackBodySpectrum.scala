@@ -2,8 +2,11 @@ package lucuma.itc.operation
 
 import lucuma.itc.base.{SampledSpectrumVisitor, ZeroMagnitudeStar, VisitableSampledSpectrum, DefaultSampledSpectrum}
 import lucuma.core.enum.MagnitudeBand
-import lucuma.core.enum.MagnitudeSystem
+import lucuma.core.enum.BrightnessUnits
+import lucuma.core.enum.SurfaceBrightnessUnits
 import lucuma.core.math.Redshift
+// import edu.gemini.spModel.core.BrightnessUnit
+// import edu.gemini.spModel.core.SurfaceBrightnessUnits
 // import edu.gemini.spModel.core._
 
 /**
@@ -163,7 +166,7 @@ final class BlackBodySpectrum(spectrum: DefaultSampledSpectrum) extends Visitabl
 
 object BlackBodySpectrum {
 
-  def apply(temp: Double, interval: Double, flux: Double, units: MagnitudeSystem, band: MagnitudeBand, redshift: Redshift) = {
+  def apply(temp: Double, interval: Double, flux: Double, units: Either[BrightnessUnits, SurfaceBrightnessUnits], band: MagnitudeBand, redshift: Redshift) = {
 
     //rescale the start and end depending on the redshift
     val z         = redshift.z
@@ -202,7 +205,7 @@ object BlackBodySpectrum {
   private def blackbodyFlux(lambda: Double, temp: Double): Double =
     (1 / Math.pow(lambda / 1000, 4)) * (1 / (Math.exp(14387 / (lambda / 1000 * temp)) - 1))
 
-  private def convertToMag(flux: Double, units: MagnitudeSystem, band: MagnitudeBand): Double = {
+  private def convertToMag(flux: Double, units: Either[BrightnessUnits, SurfaceBrightnessUnits], band: MagnitudeBand): Double = {
     //THis method should convert the flux into units of magnitude.
     //same code as in NormalizeVisitor.java.  Eventually should come out
     // into a genral purpose conversion class if needs to be used again.
@@ -213,22 +216,22 @@ object BlackBodySpectrum {
     }
 
     units match {
-      case MagnitudeSystem.Vega =>//| SurfaceBrightness.Vega =>
+      case Left(BrightnessUnits.Vega) | Right(SurfaceBrightnessUnits.Vega) =>
         flux // this is already mag
 
-      case MagnitudeSystem.AB => //| SurfaceBrightness.AB =>
+      case Left(BrightnessUnits.AB) | Right(SurfaceBrightnessUnits.AB) =>
         convert(5.632e10 * Math.pow(10, -0.4 * flux) / band.center.nanometer.value.toDouble)
 
-      case MagnitudeSystem.Jy =>//| SurfaceBrightness.Jy =>
+      case Left(BrightnessUnits.Jy) | Right(SurfaceBrightnessUnits.Jy) =>
         convert(flux * 1.509e7 / band.center.nanometer.value.toDouble)
 
-      case MagnitudeSystem.Watts =>//| SurfaceBrightness.Watts =>
+      case Left(BrightnessUnits.Watts) | Right(SurfaceBrightnessUnits.Watts) =>
         convert(flux * band.center.nanometer.value.toDouble / 1.988e-13)
 
-      case MagnitudeSystem.ErgsWavelength =>//| SurfaceBrightness.ErgsWavelength =>
+      case Left(BrightnessUnits.ErgsWavelength)  | Right(SurfaceBrightnessUnits.ErgsWavelength) =>
         convert(flux * band.center.nanometer.value.toDouble / 1.988e-14)
 
-      case MagnitudeSystem.ErgsFrequency =>//| SurfaceBrightness.ErgsFrequency =>
+      case Left(BrightnessUnits.ErgsFrequency) | Right(SurfaceBrightnessUnits.ErgsFrequency) =>
         convert(flux * 1.509e30 / band.center.nanometer.value.toDouble)
 
     }

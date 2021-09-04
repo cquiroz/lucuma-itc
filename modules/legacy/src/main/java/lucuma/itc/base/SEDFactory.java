@@ -1,23 +1,29 @@
 package lucuma.itc.base;
 
-import lucuma.itc.flamingos2.Flamingos2;
-import lucuma.itc.gnirs.Gnirs;
-import lucuma.itc.gsaoi.Gsaoi;
-import lucuma.itc.nifs.Nifs;
-import lucuma.itc.niri.Niri;
+// import lucuma.itc.flamingos2.Flamingos2;
+// import lucuma.itc.gnirs.Gnirs;
+// import lucuma.itc.gsaoi.Gsaoi;
+// import lucuma.itc.nifs.Nifs;
+// import lucuma.itc.niri.Niri;
 import lucuma.itc.operation.*;
 import lucuma.itc.shared.ObservingConditions;
 import lucuma.itc.shared.SourceDefinition;
 import lucuma.itc.shared.TelescopeDetails;
-import edu.gemini.spModel.core.BlackBody;
-import edu.gemini.spModel.core.EmissionLine;
-import edu.gemini.spModel.core.Library;
-import edu.gemini.spModel.core.LibraryNonStar;
-import edu.gemini.spModel.core.LibraryStar;
-import edu.gemini.spModel.core.MagnitudeBand;
-import edu.gemini.spModel.core.PowerLaw;
+import lucuma.spmodel.BlackBody;
+import lucuma.spmodel.EmissionLine;
+import lucuma.spmodel.PowerLaw;
+import lucuma.spmodel.UserDefinedSpectrum;
+import lucuma.spmodel.Library;
+import lucuma.spmodel.LibraryStar;
+import lucuma.spmodel.LibraryNonStar;
+// import edu.gemini.spModel.core.EmissionLine;
+// import edu.gemini.spModel.core.Library;
+// import edu.gemini.spModel.core.LibraryNonStar;
+// import edu.gemini.spModel.core.LibraryStar;
+// import edu.gemini.spModel.core.MagnitudeBand;
+// import edu.gemini.spModel.core.PowerLaw;
 import edu.gemini.spModel.core.Site;
-import edu.gemini.spModel.core.UserDefinedSpectrum;
+// import edu.gemini.spModel.core.UserDefinedSpectrum;
 import edu.gemini.spModel.core.Wavelength;
 import scala.Option;
 
@@ -98,15 +104,16 @@ public final class SEDFactory {
      *  ...
      * </pre>
      */
-    private static VisitableSampledSpectrum getUserSED(final UserDefinedSpectrum userSED, final double start, final double end, final double wavelengthInterval, final double redshift) {
-        try {
-            final DefaultArraySpectrum as = DefaultArraySpectrum.fromUserSpectrum(userSED.spectrum());
-            return new DefaultSampledSpectrum(as, start, end, wavelengthInterval, redshift);
-
-        } catch (final Exception e) {
-            throw new IllegalArgumentException("Could not parse user SED " + userSED.name() + ": " + e.getMessage());
-        }
-    }
+    // UPGRADE
+    // private static VisitableSampledSpectrum getUserSED(final UserDefinedSpectrum userSED, final double start, final double end, final double wavelengthInterval, final double redshift) {
+    //     try {
+    //         final DefaultArraySpectrum as = DefaultArraySpectrum.fromUserSpectrum(userSED.spectrum());
+    //         return new DefaultSampledSpectrum(as, start, end, wavelengthInterval, redshift);
+    //
+    //     } catch (final Exception e) {
+    //         throw new IllegalArgumentException("Could not parse user SED " + userSED.name() + ": " + e.getMessage());
+    //     }
+    // }
 
     private static VisitableSampledSpectrum getSED(final SourceDefinition sdp, final Instrument instrument) {
 
@@ -116,16 +123,14 @@ public final class SEDFactory {
                     ((BlackBody) sdp.distribution()).temperature(),
                     instrument.getSampling(),
                     sdp.norm(),
-                    sdp.units(),
+                    sdp.unitsEither(),
                     sdp.normBand(),
                     sdp.redshift());
 
         } else if (sdp.distribution() instanceof EmissionLine) {
             final EmissionLine eLine = (EmissionLine) sdp.distribution();
             return new EmissionLineSpectrum(
-                    // Wavelength is a value class, on the Java side wavelength() therefore returns just a Length
-                    // and not a Wavelength object, so we need to repackage it to make it a wavelength. Blech.
-                    new Wavelength(eLine.wavelength()),
+                    eLine.wavelength(),
                     eLine.width(),
                     eLine.flux(),
                     eLine.continuum(),
@@ -142,25 +147,27 @@ public final class SEDFactory {
 
         } else if (sdp.distribution() instanceof UserDefinedSpectrum) {
             final UserDefinedSpectrum userDefined = (UserDefinedSpectrum) sdp.distribution();
-            final MagnitudeBand band = sdp.normBand();
             Double inst_start_wave = instrument.getObservingStart();
             Double inst_end_wave = instrument.getObservingEnd();
 
             // GNIRS overrides getObservingStart and getObservingEnd for each order,
             // so use the full GNIRS XD wavelength range:
-            if (instrument instanceof Gnirs) {
-                if (((Gnirs) instrument).XDisp_IsUsed()) {
-                    inst_start_wave = 750.0;
-                    inst_end_wave = 2600.0;
-                }
-            }
+            // RESTORE
+            // if (instrument instanceof Gnirs) {
+            //     if (((Gnirs) instrument).XDisp_IsUsed()) {
+            //         inst_start_wave = 750.0;
+            //         inst_end_wave = 2600.0;
+            //     }
+            // }
 
             // The user-supplied SED must cover the range of the instrument configuration AND the normalization band:
-            temp = getUserSED(userDefined,
-                    Math.min(inst_start_wave, band.start().toNanometers()),
-                    Math.max(inst_end_wave, band.end().toNanometers()),
-                    instrument.getSampling(),
-                    sdp.redshift().z());
+            // RESTORE
+            temp = null;
+            // temp = getUserSED(userDefined,
+            //         Math.min(inst_start_wave, sdp.normBand().start().nanometer().toDouble()),
+            //         Math.max(inst_end_wave, sdp.normBand().end().nanometer().toDouble()),
+            //         instrument.getSampling(),
+            //         sdp.redshift().z());
             temp.applyWavelengthCorrection();
             return temp;
 
@@ -204,18 +211,19 @@ public final class SEDFactory {
         // both the normalization waveband and the observation waveband
         // (filter region).
 
-        final MagnitudeBand band = sdp.normBand();
-        final double start = band.start().toNanometers();
-        final double end = band.end().toNanometers();
+        // final MagnitudeBand band = sdp.normBand();
+        final double start = sdp.normBand().start().nanometer().toDouble();
+        final double end = sdp.normBand().end().nanometer().toDouble();
 
         // TODO: which instruments need this check, why only some and others not? Do all near-ir instruments need it?
         // TODO: what about Nifs and Gnirs (other near-ir instruments)?
-        if (instrument instanceof Gsaoi || instrument instanceof Niri || instrument instanceof Flamingos2) {
-            if (sed.getStart() > instrument.getObservingStart() || sed.getEnd() < instrument.getObservingEnd()) {
-                throw new IllegalArgumentException(String.format("Redshifted SED (%.1f - %.1f nm) does not cover range of instrument configuration (%.1f - %.1f nm).",
-                        sed.getStart(), sed.getEnd(), instrument.getObservingStart(), instrument.getObservingEnd()));
-            }
-        }
+        // RESTORE
+        // if (instrument instanceof Gsaoi || instrument instanceof Niri || instrument instanceof Flamingos2) {
+        //     if (sed.getStart() > instrument.getObservingStart() || sed.getEnd() < instrument.getObservingEnd()) {
+        //         throw new IllegalArgumentException(String.format("Redshifted SED (%.1f - %.1f nm) does not cover range of instrument configuration (%.1f - %.1f nm).",
+        //                 sed.getStart(), sed.getEnd(), instrument.getObservingStart(), instrument.getObservingEnd()));
+        //     }
+        // }
 
         // any sed except BBODY and ELINE have normalization regions
         if (!(sdp.distribution() instanceof EmissionLine) && !(sdp.distribution() instanceof BlackBody)) {
@@ -236,7 +244,7 @@ public final class SEDFactory {
             final SampledSpectrumVisitor norm = new NormalizeVisitor(
                     sdp.normBand(),
                     sdp.norm(),
-                    sdp.units());
+                    sdp.unitsEither());
             sed.accept(norm);
         }
 
@@ -252,7 +260,7 @@ public final class SEDFactory {
         // inputs: SED, AIRMASS, sky emmision file, mirror configuration,
         // output: SED and sky background as they arrive at instruments
 
-        final SampledSpectrumVisitor clouds = CloudTransmissionVisitor.create(odp.javaCc());
+        final SampledSpectrumVisitor clouds = CloudTransmissionVisitor.create(odp.cc());
         sed.accept(clouds);
 
         final SampledSpectrumVisitor water = WaterTransmissionVisitor.create(
@@ -276,20 +284,21 @@ public final class SEDFactory {
         sky.accept(tb);
 
         // FOR GSAOI and NIRI ADD AO STUFF HERE
-        if (instrument instanceof Gsaoi || instrument instanceof Niri || instrument instanceof Gnirs) {
-            // Moved section where sky/sed is convolved with instrument below Altair/Gems
-            // section
-            // Module 5b
-            // The instrument with its detectors modifies the source and
-            // background spectra.
-            // input: instrument, source and background SED
-            // output: total flux of source and background.
-            // TODO: for GSAOI and NIRI convolve here, why??
-            instrument.convolveComponents(sed);
-            if (ao.isDefined()) {
-                halo = Option.apply(SEDFactory.applyAoSystem(ao.get(), sky, sed));
-            }
-        }
+        // RESTORE
+        // if (instrument instanceof Gsaoi || instrument instanceof Niri || instrument instanceof Gnirs) {
+        //     // Moved section where sky/sed is convolved with instrument below Altair/Gems
+        //     // section
+        //     // Module 5b
+        //     // The instrument with its detectors modifies the source and
+        //     // background spectra.
+        //     // input: instrument, source and background SED
+        //     // output: total flux of source and background.
+        //     // TODO: for GSAOI and NIRI convolve here, why??
+        //     instrument.convolveComponents(sed);
+        //     if (ao.isDefined()) {
+        //         halo = Option.apply(SEDFactory.applyAoSystem(ao.get(), sky, sed));
+        //     }
+        // }
 
         sky.accept(tel);
 
@@ -305,16 +314,18 @@ public final class SEDFactory {
         // background spectra.
         // input: instrument, source and background SED
         // output: total flux of source and background.
-        if (!(instrument instanceof Gsaoi) && !(instrument instanceof Niri) && !(instrument instanceof Gnirs)) {
-            // TODO: for any instrument other than GSAOI and NIRI convolve here, why?
-            instrument.convolveComponents(sed);
-        }
+        // RESTORE
+        // if (!(instrument instanceof Gsaoi) && !(instrument instanceof Niri) && !(instrument instanceof Gnirs)) {
+        //     // TODO: for any instrument other than GSAOI and NIRI convolve here, why?
+        //     instrument.convolveComponents(sed);
+        // }
         instrument.convolveComponents(sky);
 
         // TODO: AO (FOR NIFS DONE AT THE VERY END, WHY DIFFERENT FROM GSAOI/NIRI?)
-        if (instrument instanceof Nifs && ao.isDefined()) {
-            halo = Option.apply(SEDFactory.applyAoSystem(ao.get(), sky, sed));
-        }
+        // RESTORE
+        // if (instrument instanceof Nifs && ao.isDefined()) {
+        //     halo = Option.apply(SEDFactory.applyAoSystem(ao.get(), sky, sed));
+        // }
 
         // End of the Spectral energy distribution portion of the ITC.
         return new SourceResult(sed, sky, halo);

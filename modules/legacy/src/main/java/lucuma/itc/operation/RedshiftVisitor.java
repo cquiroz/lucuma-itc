@@ -2,7 +2,7 @@ package lucuma.itc.operation;
 
 import lucuma.itc.base.SampledSpectrum;
 import lucuma.itc.base.SampledSpectrumVisitor;
-import edu.gemini.spModel.core.Redshift;
+import lucuma.core.math.Redshift;
 
 /**
  * This visitor performs a redshift on the spectrum.
@@ -20,7 +20,7 @@ public class RedshiftVisitor implements SampledSpectrumVisitor {
      * @param z redshift = velocity / c
      */
     public RedshiftVisitor(final Redshift redshift) {
-        _z = redshift.z();
+        _z = redshift.z().toDouble();
     }
 
     /**

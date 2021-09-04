@@ -1,6 +1,6 @@
 package lucuma.itc.base;
 
-import lucuma.itc.niri.GrismOptics;
+// import lucuma.itc.niri.GrismOptics;
 import lucuma.itc.shared.ItcWarning;
 import edu.gemini.spModel.core.Site;
 import scala.Option;

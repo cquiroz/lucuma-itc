@@ -1,5 +1,6 @@
 package lucuma.itc.shared
 
+import edu.gemini.spModel.core.Site
 // import edu.gemini.spModel.core.{Wavelength, Site}
 // import edu.gemini.spModel.data.YesNoType
 // import edu.gemini.spModel.gemini.acqcam.AcqCamParams
@@ -48,7 +49,30 @@ final case class GmosParameters(
                      spectralBinning:   Int,
                      ccdType:           enum.GmosDetector,
                      builtinROI:        enum.GmosRoi,
-                     site:              enum.Site) extends InstrumentDetails
+                     site:              enum.Site) extends InstrumentDetails {
+    import edu.gemini.spModel.gemini.gmos.GmosCommonType
+    import edu.gemini.spModel.gemini.gmos.GmosNorthType
+
+    val legacyCcdType = ccdType match {
+      case enum.GmosDetector.E2V => GmosCommonType.DetectorManufacturer.E2V
+      case enum.GmosDetector.HAMAMATSU => GmosCommonType.DetectorManufacturer.HAMAMATSU
+    }
+
+    val legacySite = site match {
+      case enum.Site.GN => Site.GN
+      case enum.Site.GS => Site.GS
+    }
+
+    val legacyFpMask = fpMask match {
+      case enum.GmosNorthFpu.Ifu1 => GmosNorthType.FPUnitNorth.IFU_1
+      case enum.GmosNorthFpu.Ifu2 => GmosNorthType.FPUnitNorth.IFU_2
+    }
+
+    val legacyGrating = grating match {
+      case enum.GmosNorthDisperser.B480_G5309 => GmosNorthType.DisperserNorth.B480_G5309
+    }
+  }
+
 //
 // final case class GnirsParameters(
 //                      pixelScale:        GNIRSParams.PixelScale,
@@ -129,7 +153,7 @@ object InstrumentDetails {
     // case _: GhostParameters           => true // TBD is this true?
     // case i: NiriParameters            => i.grism.equals(Niri.Disperser.NONE)
     // case i: TRecsParameters           => i.grating.equals(TReCSParams.Disperser.MIRROR)
-    case i: GmosParameters            =>
+    case _: GmosParameters            =>
       true
       // i.grating.equals(GmosNorthType.DisperserNorth.MIRROR) ||
       // i.grating.equals(GmosSouthType.DisperserSouth.MIRROR)

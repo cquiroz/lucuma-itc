@@ -1,6 +1,6 @@
 package lucuma.itc.base;
 
-import edu.gemini.spModel.core.Redshift;
+import lucuma.core.math.Redshift;
 
 /**
  * This class creates a PowerLaw spectrum over the interval defined by the
@@ -20,7 +20,7 @@ public class PowerLawSpectrum extends DefaultSampledSpectrum {
         double _end = 1.8 * end;//1.2
 
         //shift start and end depending on redshift
-        final double z = redshift.z();
+        final double z = redshift.z().toDouble();
         _start /= (1 + z);
         _end /= (1 + z);
 

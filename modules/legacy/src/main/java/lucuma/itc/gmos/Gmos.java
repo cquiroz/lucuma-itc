@@ -2,7 +2,15 @@ package lucuma.itc.gmos;
 
 import lucuma.itc.base.*;
 import lucuma.itc.operation.DetectorsTransmissionVisitor;
-import lucuma.itc.shared.*;
+import lucuma.itc.shared.GmosParameters;
+import lucuma.itc.shared.ObservationDetails;
+import lucuma.itc.shared.ItcWarning;
+import lucuma.itc.shared.IfuMethod;
+import lucuma.itc.shared.IfuSingle;
+import lucuma.itc.shared.IfuRadial;
+import lucuma.itc.shared.IfuSum;
+import lucuma.itc.shared.Imaging;
+import lucuma.itc.shared.Spectroscopy;
 import edu.gemini.spModel.gemini.gmos.GmosCommonType;
 import edu.gemini.spModel.gemini.gmos.GmosNorthType;
 import edu.gemini.spModel.gemini.gmos.GmosSouthType;
@@ -53,7 +61,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
     private GmosSaturLimitRule gmosSaturLimitWarning;  // GMOS-specific saturation limit warning
 
     public Gmos(final GmosParameters gp, final ObservationDetails odp, final String FILENAME, final int detectorCcdIndex) {
-        super(gp.site(), Bands.VISIBLE, INSTR_DIR, FILENAME);
+        super(gp.legacySite(), Bands.VISIBLE, INSTR_DIR, FILENAME);
 
         this.odp    = odp;
         this.gp     = gp;
@@ -64,7 +72,8 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
 
         // TODO: filter is not yet defined, need to work with filter from gp, clean this up
         if (!gp.filter().equals(GmosNorthType.FilterNorth.NONE) && !gp.filter().equals(GmosSouthType.FilterSouth.NONE)) {
-            _Filter = Filter.fromWLFile(getPrefix(), gp.filter().name(), getDirectory() + "/");
+            // UPGRADE
+            _Filter = Filter.fromWLFile(getPrefix(), gp.filter().tag(), getDirectory() + "/");
             addFilter(_Filter);
         }
 
@@ -73,10 +82,10 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
         addComponent(_fixedOptics);
 
         //Choose correct CCD QE curve
-        switch (gp.ccdType()) {
+        switch (gp.legacyCcdType()) {
             // E2V, site dependent
             case E2V:
-                switch (gp.site()) {
+                switch (gp.legacySite()) {
                     // E2V for GN: gmos_n_E2V4290DDmulti3.dat      => EEV DD array
                     case GN:
                         _detector = new Detector(getDirectory() + "/", getPrefix(), "E2V4290DDmulti3", "EEV DD array");
@@ -121,9 +130,9 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
 
 
         // TODO: grating is not yet defined, need to work with grating from gp, clean this up
-        if (!gp.grating().equals(GmosNorthType.DisperserNorth.MIRROR) && !gp.grating().equals(GmosSouthType.DisperserSouth.MIRROR)) {
-            _gratingOptics = new GmosGratingOptics(getDirectory() + "/" + getPrefix(), gp.grating(), _detector,
-                    gp.centralWavelength().toNanometers(),
+        if (!gp.legacyGrating().equals(GmosNorthType.DisperserNorth.MIRROR) && !gp.grating().equals(GmosSouthType.DisperserSouth.MIRROR)) {
+            _gratingOptics = new GmosGratingOptics(getDirectory() + "/" + getPrefix(), gp.legacyGrating(), _detector,
+                    gp.centralWavelength().nanometer().toDouble(),
                     _detector.getDetectorPixels(),
                     gp.spectralBinning());
             _sampling = _gratingOptics.dispersion();
@@ -132,7 +141,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
             // we only need the detector transmission visitor for the spectroscopy case (i.e. if there is a grating)
             if (detectorCcdIndex == 0) {
                 final double nmppx = _gratingOptics.dispersion();
-                switch (gp.ccdType()) {
+                switch (gp.legacyCcdType()) {
                     case E2V:
                         _dtv = new DetectorsTransmissionVisitor(gp, nmppx, getDirectory() + "/" + getPrefix() + "ccdpix" + Instrument.getSuffix());
                         break;
@@ -159,9 +168,9 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
 
     /** {@inheritDoc} */
     public double getSlitWidth() {
-        if      (gp.fpMask().isIFU())               return 0.3;
-        else if (gp.customSlitWidth().isDefined())  return gp.customSlitWidth().get().getWidth();
-        else                                        return gp.fpMask().getWidth();
+        if      (gp.legacyFpMask().isIFU())               return 0.3;
+        else if (gp.customSlitWidth().isDefined())  return gp.customSlitWidth().get().width().toDoubleDegrees() / 3600;
+        else                                        return gp.fpMask().slitWidth().get().toDoubleDegrees() / 3600;
     }
 
     /**
@@ -203,7 +212,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
     }
 
     public GmosCommonType.Disperser getGrating() {
-        return gp.grating();
+        return gp.legacyGrating();
     }
 
     public double getGratingDispersion() {
@@ -218,7 +227,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
     }
 
     public double getPixelSize() {
-        switch (gp.ccdType()) {
+        switch (gp.legacyCcdType()) {
             case E2V:       return ORIG_PLATE_SCALE * gp.spatialBinning();
             case HAMAMATSU: return HAM_PLATE_SCALE * gp.spatialBinning();
             default:        throw new Error("invalid ccd type");
@@ -250,7 +259,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
     }
 
     public boolean isIfuUsed() {
-        return gp.fpMask().isIFU();
+        return gp.legacyFpMask().isIFU();
     }
 
     public Option<IfuMethod> getIfuMethod() {
@@ -258,11 +267,11 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
     }
 
     public GmosCommonType.FPUnit getFpMask() {
-        return gp.fpMask();
+        return gp.legacyFpMask();
     }
 
     public double getCentralWavelength() {
-        return gp.centralWavelength().toNanometers();
+        return gp.centralWavelength().nanometer().toDouble();
     }
 
     public double getObservingStart(double shift) {
@@ -314,7 +323,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
                         "focal plane mask in the Instrument " +
                         "configuration section.");
 
-            if (gp.fpMask().equals(GmosNorthType.FPUnitNorth.CUSTOM_MASK) || gp.fpMask().equals(GmosSouthType.FPUnitSouth.CUSTOM_MASK)) {
+            if (gp.legacyFpMask().equals(GmosNorthType.FPUnitNorth.CUSTOM_MASK) || gp.fpMask().equals(GmosSouthType.FPUnitSouth.CUSTOM_MASK)) {
 
                 if (gp.customSlitWidth().isEmpty())
                     throw new RuntimeException("Custom mask is selected but custom slit width is undefined.");
@@ -323,7 +332,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
                     throw new RuntimeException("Slit width for the custom mask is not known.");
             }
 
-            if ((gp.fpMask().isIFU() || isIfu2()) && gp.spatialBinning() != 1) {
+            if ((gp.legacyFpMask().isIFU() || isIfu2()) && gp.spatialBinning() != 1) {
                 throw new RuntimeException("Spatial binning must be 1 with IFU observations.\n" +
                         "The GMOS fiber traces on the detector blend together if the detector is binned spatially\n" +
                         "and the fibers cannot be extracted reliably using the Gemini IRAF data reduction package.");
@@ -331,7 +340,7 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
 
             // central wavelength, site dependent
             double _centralWavelength = getCentralWavelength();
-            switch (gp.site()) {
+            switch (gp.legacySite()) {
                 // User-input central wavelength for GN
                 case GN:
                     if (_centralWavelength < 360 || _centralWavelength > 1000)
@@ -390,13 +399,13 @@ public abstract class Gmos extends Instrument implements BinningProvider, Spectr
         return new ArrayList<ItcWarning>() {{
             // How to display gaps in proper location for IFU-2 case? Currently we don't display them at all
             // in the wavelength charts. They are displayed in the pixel space chart for IFU-2 only.
-            if ((gp.fpMask().isIFU() || isIfu2()) && gp.spatialBinning() != 1) {
+            if ((gp.legacyFpMask().isIFU() || isIfu2()) && gp.spatialBinning() != 1) {
                 add (new ItcWarning("Spatial binning is strongly discouraged with IFU observations." +
                         " This is because the GMOS fiber traces on the detector blend together if" +
                         " the detector is binned spatially and the fibers cannot be extracted" +
                         " reliably using the Gemini IRAF data reduction package. "));
             }
-            if ((gp.fpMask().isIFU() || isIfu2()) && gp.spectralBinning() == 4) {
+            if ((gp.legacyFpMask().isIFU() || isIfu2()) && gp.spectralBinning() == 4) {
                 add (new ItcWarning("THE SPECTRAL RESOLUTION IS UNDERSAMPLED. " +
                         "The effective slit width of the IFU fibers is 0.31 arcsec, " +
                         "and binning by four yields fewer than 1 pixel per resolution element for all gratings. "));

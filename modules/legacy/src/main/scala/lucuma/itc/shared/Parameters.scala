@@ -1,8 +1,15 @@
 package lucuma.itc.shared
 
+import cats.syntax.all._
 // import edu.gemini.shared.util.immutable.ImEither
-import edu.gemini.spModel.core.{BrightnessUnit, MagnitudeBand, Redshift, SpatialProfile, SpectralDistribution, UniformSource}
+// import edu.gemini.spModel.core.{UniformSource}
 import edu.gemini.spModel.gemini.obscomp.SPSiteQuality.{CloudCover, ImageQuality, SkyBackground, WaterVapor}
+import lucuma.spmodel.SpectralDistribution
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.model.SpatialProfile
+import lucuma.core.enum.BrightnessUnits
+import lucuma.core.enum.SurfaceBrightnessUnits
+import lucuma.core.math.Redshift
 
 // import scalaz._
 // import Scalaz._
@@ -72,14 +79,18 @@ final case class SourceDefinition(
                      profile: SpatialProfile,
                      distribution: SpectralDistribution,
                      norm: Double,
-                     units: BrightnessUnit,
+                     units: BrightnessUnits,
                      normBand: MagnitudeBand,
                      redshift: Redshift) {
 
   val isUniform: Boolean = profile match {
-    case UniformSource => true
+    case SpatialProfile.UniformSource => true
     case _             => false
   }
+
+  // REMOVE
+  def unitsEither: Either[BrightnessUnits, SurfaceBrightnessUnits] =
+    units.asLeft
 }
 
 // ==== Calculation method

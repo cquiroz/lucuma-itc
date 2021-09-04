@@ -1,10 +1,11 @@
 package lucuma.itc.base;
 
-import edu.gemini.spModel.core.Redshift;
-import edu.gemini.spModel.core.Wavelength;
+import lucuma.core.math.Redshift;
+import lucuma.core.math.Wavelength;
 import squants.motion.Velocity;
 import squants.radio.Irradiance;
 import squants.radio.SpectralIrradiance;
+import scala.math.BigDecimal;
 
 /**
  * This class creates a EmissionLine spectrum over the interval defined by the
@@ -21,11 +22,11 @@ public final class EmissionLineSpectrum implements VisitableSampledSpectrum {
         _spectrum = spectrum;
     }
 
-    public EmissionLineSpectrum(final Wavelength wavelength, final Velocity width, final Irradiance flux,
-                                final SpectralIrradiance continuum, final Redshift redshift, final double interval) {
+    public EmissionLineSpectrum(final Wavelength wavelength, final BigDecimal width, final BigDecimal flux,
+                                final BigDecimal continuum, final Redshift redshift, final double interval) {
 
         //shift start and end depending on redshift
-        final double z     = redshift.z();
+        final double z     = redshift.z().toDouble();
         final double start = 300 / (1 + z);
         final double end = 30000 / (1 + z);
 
@@ -33,12 +34,18 @@ public final class EmissionLineSpectrum implements VisitableSampledSpectrum {
         final double[] fluxArray = new double[n];
 
         // convert values to internal units
-        final double _wavelength    = wavelength.toNanometers();
-        final double _flux          = flux.toWattsPerSquareMeter() * _wavelength / 1.988e-16;
-        final double _continuumFlux = continuum.toWattsPerSquareMeterPerMicron() * _wavelength / 1.988e-13;
+        final double _wavelength    = wavelength.nanometer().toDouble();
+        // UPGRADE
+        // final double _flux          = flux.toWattsPerSquareMeter() * _wavelength / 1.988e-16;
+        final double _flux          = flux.toDouble() * _wavelength / 1.988e-16;
+        // UPGRADE
+        // final double _continuumFlux = continuum.toWattsPerSquareMeterPerMicron() * _wavelength / 1.988e-13;
+        final double _continuumFlux = continuum.toDouble() * _wavelength / 1.988e-13;
 
         // calculate sigma
-        final double sigma = width.toKilometersPerSecond() * _wavelength / 7.05e5;
+        // UPGRADE
+        // final double sigma = width.toKilometersPerSecond() * _wavelength / 7.05e5;
+        final double sigma = width.toDouble() * _wavelength / 7.05e5;
         int i = 0;
         for (double lam = start; lam <= end; lam += interval) {
             fluxArray[i] = _elineFlux(lam, sigma, _flux, _continuumFlux, _wavelength);

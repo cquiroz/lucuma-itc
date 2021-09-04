@@ -1,4 +1,4 @@
-package lucuma.itc.model
+package lucuma.spmodel
 
 import lucuma.core.math.Wavelength
 import coulomb._

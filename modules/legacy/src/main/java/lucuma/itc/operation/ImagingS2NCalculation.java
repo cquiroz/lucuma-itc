@@ -2,11 +2,11 @@ package lucuma.itc.operation;
 
 import lucuma.itc.base.BinningProvider;
 import lucuma.itc.base.Instrument;
-import lucuma.itc.gsaoi.Gsaoi;
-import lucuma.itc.niri.Niri;
+// import lucuma.itc.gsaoi.Gsaoi;
+// import lucuma.itc.niri.Niri;
 import lucuma.itc.shared.ApertureMethod;
 import lucuma.itc.shared.ObservationDetails;
-import lucuma.itc.trecs.TRecs;
+// import lucuma.itc.trecs.TRecs;
 
 public abstract class ImagingS2NCalculation implements ImagingS2NCalculatable {
 
@@ -44,9 +44,13 @@ public abstract class ImagingS2NCalculation implements ImagingS2NCalculatable {
                 instrument.getDarkCurrent();
         // TODO: Why 1 for NIRI/GSAOI?? Is this a bug or is there a reason why in the original code those instruments did not
         // TODO: set the aperture and used a (default) value of 1?
-        this.skyAper         = (instrument instanceof Niri || instrument instanceof Gsaoi) ? 1 : ((ApertureMethod) obs.analysisMethod()).skyAperture();
+        // UPGRADE
+        // this.skyAper         = (instrument instanceof Niri || instrument instanceof Gsaoi) ? 1 : ((ApertureMethod) obs.analysisMethod()).skyAperture();
+        this.skyAper         = ((ApertureMethod) obs.analysisMethod()).skyAperture();
         // TODO: marker interface like for binning?
-        this.elfinParam      = (instrument instanceof TRecs) ? ((TRecs) instrument).getExtraLowFreqNoise() : 1; // default 1 will have no effect
+        // UPGRADE
+        // this.elfinParam      = (instrument instanceof TRecs) ? ((TRecs) instrument).getExtraLowFreqNoise() : 1; // default 1 will have no effect
+        this.elfinParam      = 1;
         coadds = obs.calculationMethod().coaddsOrElse(1);
     }
 

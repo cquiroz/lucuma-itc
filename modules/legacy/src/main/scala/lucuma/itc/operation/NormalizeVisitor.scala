@@ -1,8 +1,9 @@
 package lucuma.itc.operation
 
 import lucuma.itc.base.{ZeroMagnitudeStar, SampledSpectrum, SampledSpectrumVisitor}
-// import edu.gemini.spModel.core.{SurfaceBrightness, MagnitudeSystem, BrightnessUnit, MagnitudeBand}
-import lucuma.core.enum.MagnitudeSystem
+// import edu.gemini.spModel.core.{SurfaceBrightnessUnits, BrightnessUnits, BrightnessUnit, MagnitudeBand}
+import lucuma.core.enum.BrightnessUnits
+import lucuma.core.enum.SurfaceBrightnessUnits
 import lucuma.core.enum.MagnitudeBand
 
 /**
@@ -11,7 +12,7 @@ import lucuma.core.enum.MagnitudeBand
  * specified waveband is equal to a specified value.
  * This is where unit conversion happens.
  */
-final class NormalizeVisitor(band: MagnitudeBand, userNorm: Double, units: MagnitudeSystem) extends SampledSpectrumVisitor {
+final class NormalizeVisitor(band: MagnitudeBand, userNorm: Double, units: Either[BrightnessUnits, SurfaceBrightnessUnits]) extends SampledSpectrumVisitor {
 
   /**
    * Implements the visitor interface.
@@ -21,23 +22,23 @@ final class NormalizeVisitor(band: MagnitudeBand, userNorm: Double, units: Magni
 
     val norm = units match {
 
-      case MagnitudeSystem.Vega =>//| SurfaceBrightness.Vega =>
+      case Left(BrightnessUnits.Vega) | Right(SurfaceBrightnessUnits.Vega) =>
         val zeropoint = ZeroMagnitudeStar.getAverageFlux(band)
         zeropoint * Math.pow(10.0, -0.4 * userNorm)
 
-      case MagnitudeSystem.AB =>//| SurfaceBrightness.AB =>
+      case Left(BrightnessUnits.AB) | Right(SurfaceBrightnessUnits.AB) =>
         5.632e10 * Math.pow(10, -0.4 * userNorm) / band.center.nanometer.value.toDouble
 
-      case MagnitudeSystem.Jy =>//| SurfaceBrightness.Jy =>
+      case Left(BrightnessUnits.Jy) | Right(SurfaceBrightnessUnits.Jy) =>
         userNorm * 1.509e7 / band.center.nanometer.value.toDouble
 
-      case MagnitudeSystem.Watts =>//| SurfaceBrightness.Watts =>
+      case Left(BrightnessUnits.Watts) | Right(SurfaceBrightnessUnits.Watts) =>
         userNorm * band.center.nanometer.value.toDouble / 1.988e-13
 
-      case MagnitudeSystem.ErgsWavelength =>//| SurfaceBrightness.ErgsWavelength =>
+      case Left(BrightnessUnits.ErgsWavelength) | Right(SurfaceBrightnessUnits.ErgsWavelength) =>
         userNorm * band.center.nanometer.value.toDouble / 1.988e-14
 
-      case MagnitudeSystem.ErgsFrequency =>//| SurfaceBrightness.ErgsFrequency =>
+      case Left(BrightnessUnits.ErgsFrequency) | Right(SurfaceBrightnessUnits.ErgsFrequency) =>
         userNorm * 1.509e30 / band.center.nanometer.value.toDouble
 
     }

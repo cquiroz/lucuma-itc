@@ -102,11 +102,11 @@ public class DefaultSampledSpectrum implements VisitableSampledSpectrum {
         if (newEnd < getStart() || newStart > getEnd()) {
             return;
         }
-        double[] data = new double[new Double((newEnd - newStart) / _xInterval).intValue() + 4];
+        double[] data = new double[Double.valueOf((newEnd - newStart) / _xInterval).intValue() + 4];
         //System.out.println("os: " + getStart() + "ns: " + newStart + " oe: " + getEnd() + " ne: " + newEnd);
-        //System.out.println("startpos: " + new Double((newStart-getStart())/_xInterval).intValue() + "length: " + getLength() + " copylength: " + new Double((newEnd-newStart)/_xInterval).intValue());
+        //System.out.println("startpos: " + Double.valueOf((newStart-getStart())/_xInterval).intValue() + "length: " + getLength() + " copylength: " + Double.valueOf((newEnd-newStart)/_xInterval).intValue());
 
-        System.arraycopy(getValues(), new Double((newStart - getStart()) / _xInterval).intValue(), data, 0, new Double((newEnd - newStart) / _xInterval).intValue());
+        System.arraycopy(getValues(), Double.valueOf((newStart - getStart()) / _xInterval).intValue(), data, 0, Double.valueOf((newEnd - newStart) / _xInterval).intValue());
         reset(data, newStart, _xInterval);
     }
 
@@ -286,15 +286,15 @@ public class DefaultSampledSpectrum implements VisitableSampledSpectrum {
                 else if (i - smoothing_element / 2 > 0 && smoothing_element % 2 != 0) { //if odd
                     //System.out.println(" mod: " +smoothing_element%2);
                     //double temp = _y[i-2]+_y[i-1]+_y[i]+_y[i+1]+_y[i+2];
-                    _y_temp[i] = getAverage(i - (new Double((smoothing_element) / 2).intValue()), i + (new Double((smoothing_element) / 2).intValue()));
+                    _y_temp[i] = getAverage(i - (Double.valueOf((smoothing_element) / 2).intValue()), i + (Double.valueOf((smoothing_element) / 2).intValue()));
                     //_y[i]=temp/5;
                 } else if (i - smoothing_element / 2 > 0) //if even
-                    _y_temp[i] = getAverage(new Double(i - smoothing_element / 2).intValue() + 1, new Double(i + smoothing_element / 2).intValue());
+                    _y_temp[i] = getAverage(Double.valueOf(i - smoothing_element / 2).intValue() + 1, Double.valueOf(i + smoothing_element / 2).intValue());
             } catch (Exception e) {
                 System.out.println("Smooth: " + e.toString());
             }
         }
-        //System.out.println("End"+ new Double(smoothing_element/2).intValue()+ "  " + getSampling());
+        //System.out.println("End"+ Double.valueOf(smoothing_element/2).intValue()+ "  " + getSampling());
         _y = _y_temp;
     }
 
