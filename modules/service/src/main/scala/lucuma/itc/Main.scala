@@ -13,7 +13,7 @@ import org.http4s.server.staticcontent._
 import scala.concurrent.ExecutionContext.global
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.Logger
-import lucuma.itc.model._
+import lucuma.itc.shared._
 
 object Main extends IOApp {
   def run(args: List[String]) =

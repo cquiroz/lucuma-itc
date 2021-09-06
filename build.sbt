@@ -50,7 +50,7 @@ scalaVersion := "3.0.1"
 
 lazy val service = project
   .in(file("modules/service"))
-  .dependsOn(model)
+  .dependsOn(legacy)
   // .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   // .settings(testkitLibSettings: _*)
@@ -72,11 +72,11 @@ lazy val legacy = project
   .in(file("modules/legacy"))
   .settings(commonLibSettings: _*)
 
-lazy val model = project
-  .in(file("modules/model"))
-  // .dependsOn(model)
-  // .settings(commonSettings: _*)
-  .settings(commonLibSettings: _*)
+// lazy val model = project
+//   .in(file("modules/model"))
+//   // .dependsOn(model)
+//   // .settings(commonSettings: _*)
+//   .settings(commonLibSettings: _*)
 // .settings(testkitLibSettings: _*)
 // .jsSettings(commonModuleTest: _*)
 // .jvmSettings(commonJVMSettings)

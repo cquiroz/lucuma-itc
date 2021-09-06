@@ -3,7 +3,7 @@
     "wv" : "Dry",
     "sb" : "Dark",
     "airmass" : 2.2686797594164386E-257,
-    "ce" : "PointOne",
+    "cc" : "PointOne",
     "iq" : "PointEight"
   },
   "source" : {
@@ -19,9 +19,7 @@
       }
     },
     "norm" : 500.0,
-    "units" : {
-      "MagnitudeSystem" : "Vega"
-    },
+    "units" : "Vega",
     "redshift" : {
       "z" : 0.0
     }

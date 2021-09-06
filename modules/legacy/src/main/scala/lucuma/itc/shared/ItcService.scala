@@ -294,7 +294,7 @@ object ItcService {
   type Result = Either[ItcError, ItcResult]
   // val itc = new ItcServiceImpl()
 
-  def pply(): ItcService = new ItcService {
+  def apply(): ItcService = new ItcService {
     def calculate(p: ItcParameters, headless: Boolean): Result = {
       // itc.calculate(p, true)
       ???

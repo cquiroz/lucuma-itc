@@ -63,12 +63,13 @@ final case class GmosParameters(
       case enum.Site.GS => Site.GS
     }
 
-    val legacyFpMask = fpMask match {
+    def legacyFpMak = fpMask match {
       case enum.GmosNorthFpu.Ifu1 => GmosNorthType.FPUnitNorth.IFU_1
       case enum.GmosNorthFpu.Ifu2 => GmosNorthType.FPUnitNorth.IFU_2
+      case enum.GmosNorthFpu.Ns5 => GmosNorthType.FPUnitNorth.NS_5
     }
 
-    val legacyGrating = grating match {
+    def legacyGrating = grating match {
       case enum.GmosNorthDisperser.B480_G5309 => GmosNorthType.DisperserNorth.B480_G5309
     }
   }

@@ -12,10 +12,13 @@ import io.circe.syntax._
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.generic.extras.semiauto.deriveEnumerationDecoder
+import io.circe.generic.extras.semiauto.deriveEnumerationEncoder
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.dsl._
-import lucuma.itc.model._
+import lucuma.itc.base._
+import lucuma.spmodel._
+import lucuma.itc.shared._
 import coulomb.refined._
 import eu.timepit.refined.numeric.Positive
 import lucuma.core.math.Angle
@@ -24,9 +27,9 @@ import lucuma.core.enum.WaterVapor
 import lucuma.core.enum.CloudExtinction
 import lucuma.core.enum.ImageQuality
 import org.typelevel.log4cats.Logger
-import edu.gemini.itc.shared.TelescopeDetails
 import edu.gemini.spModel.telescope.IssPort
 import edu.gemini.spModel.guide.GuideProbe
+import lucuma.core.enum.BrightnessUnits
 
 trait ItcParametersCodec {
   import lucuma.core.math.Redshift
@@ -97,6 +100,11 @@ trait ItcParametersCodec {
     deriveEnumerationDecoder[ImageQuality]
   implicit val skyBackgroundDecoder: Decoder[SkyBackground] =
     deriveEnumerationDecoder[SkyBackground]
+  implicit val brightnessUnitsDecoder: Decoder[BrightnessUnits] =
+    deriveEnumerationDecoder[BrightnessUnits]
+  implicit val brightnessUnitsEncoder: Encoder[BrightnessUnits] =
+    deriveEnumerationEncoder[BrightnessUnits]
+  println(brightnessUnitsEncoder(BrightnessUnits.Vega))
   implicit val observingConditionsDecoder: Decoder[ObservingConditions] =
     deriveDecoder[ObservingConditions]
   implicit val s2NDecoder: Decoder[S2NMethod] =

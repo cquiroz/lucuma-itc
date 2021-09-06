@@ -3,9 +3,13 @@ package lucuma.itc.shared
 import cats.syntax.all._
 // import edu.gemini.shared.util.immutable.ImEither
 // import edu.gemini.spModel.core.{UniformSource}
-import edu.gemini.spModel.gemini.obscomp.SPSiteQuality.{CloudCover, ImageQuality, SkyBackground, WaterVapor}
+// import edu.gemini.spModel.gemini.obscomp.SPSiteQuality.{CloudCover, ImageQuality}
 import lucuma.spmodel.SpectralDistribution
 import lucuma.core.enum.MagnitudeBand
+import lucuma.core.enum.CloudExtinction
+import lucuma.core.enum.WaterVapor
+import lucuma.core.enum.ImageQuality
+import lucuma.core.enum.SkyBackground
 import lucuma.core.model.SpatialProfile
 import lucuma.core.enum.BrightnessUnits
 import lucuma.core.enum.SurfaceBrightnessUnits
@@ -55,8 +59,8 @@ object ExactCc {
 }
 
 final case class ObservingConditions(
-                      iq: Either[ExactIq, ImageQuality],
-                      cc: Either[ExactCc, CloudCover],
+                      iq: ImageQuality,
+                      cc: CloudExtinction,
                       wv: WaterVapor,
                       sb: SkyBackground,
                       airmass: Double) {
@@ -70,7 +74,7 @@ final case class ObservingConditions(
   //   cc.asImEither
 
   def ccExtinction: Double =
-    cc.fold(_.toExtinction, _.getExtinction)
+    cc.toMagnitudes
 
 }
 
