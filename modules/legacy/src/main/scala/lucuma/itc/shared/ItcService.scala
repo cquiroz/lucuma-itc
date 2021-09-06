@@ -2,8 +2,7 @@ package lucuma.itc.shared
 
 // import lucuma.itc.model.TelescopeDetails
 // import edu.gemini.util.trpc.client.TrpcClient
-// import scala.swing.Color
-
+import scala.swing.Color
 
 import cats.syntax.all._
 // import lucuma.itc.service.ItcServiceImpl
@@ -115,7 +114,7 @@ final case class SpcSeriesData(
     dataType: SpcDataType,
     title: String,
     data: Array[Array[Double]],
-    // color: Option[Color] = None
+    color: Option[Color] = None
 ) {
   def x(i: Int): Double = xValues(i)
   def y(i: Int): Double = yValues(i)
@@ -132,7 +131,7 @@ final case class SpcSeriesData(
 
   override def equals(other: Any): Boolean =
     other match {
-      case SpcSeriesData(`dataType`, `title`, arr) =>
+      case SpcSeriesData(`dataType`, `title`, arr, `color`) =>
         (arr corresponds data)(_ sameElements _)
       case _ => false
     }
@@ -150,9 +149,9 @@ object SpcSeriesData {
       dataType: SpcDataType,
       title: String,
       data: Array[Array[Double]],
-      // color: Option[Color] = None
+      color: Option[Color] = None
   ): SpcSeriesData = {
-    val ssd = new SpcSeriesData(dataType, title, data)
+    val ssd = new SpcSeriesData(dataType, title, data, color)
     ssd.withLegendVisibility(visibility)
   }
 }
@@ -292,12 +291,11 @@ case class ItcParameters(
 object ItcService {
 
   type Result = Either[ItcError, ItcResult]
-  // val itc = new ItcServiceImpl()
+  val itc = new ItcServiceImpl()
 
   def apply(): ItcService = new ItcService {
     def calculate(p: ItcParameters, headless: Boolean): Result = {
-      // itc.calculate(p, true)
-      ???
+      itc.calculate(p, true)
     }
   }
   /** Performs an ITC call on the given host. */

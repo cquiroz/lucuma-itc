@@ -95,6 +95,7 @@ lazy val commonLibSettings = Seq(
       // "com.manyangled"    %%% "coulomb-time-units"         % coulombVersion,
       "com.manyangled"    %% "coulomb-cats"               % coulombVersion,
       "com.manyangled"    %% "coulomb-refined"            % coulombVersion,
+      "org.scala-lang.modules" %% "scala-swing" % "3.0.0"
       // "com.manyangled"    %%% "coulomb-physical-constants" % coulombVersion,
   )
 )
