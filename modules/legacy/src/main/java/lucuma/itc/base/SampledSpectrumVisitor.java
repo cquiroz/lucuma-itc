@@ -18,5 +18,6 @@ package lucuma.itc.base;
  */
 @FunctionalInterface
 public interface SampledSpectrumVisitor {
+
     void visit(SampledSpectrum spectrum);
 }

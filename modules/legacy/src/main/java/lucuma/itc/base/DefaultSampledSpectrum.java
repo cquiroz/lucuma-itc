@@ -110,7 +110,6 @@ public class DefaultSampledSpectrum implements VisitableSampledSpectrum {
         reset(data, newStart, _xInterval);
     }
 
-
     /**
      * Sets all these SampledSpectrum parameters.
      * I don't like a method that sets everything at once, but I inherited

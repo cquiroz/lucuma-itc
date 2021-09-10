@@ -295,7 +295,13 @@ object ItcService {
 
   def apply(): ItcService = new ItcService {
     def calculate(p: ItcParameters, headless: Boolean): Result = {
-      itc.calculate(p, true)
+      try {
+        itc.calculate(p, true)
+      } catch {
+        case x =>
+          x.printStackTrace()
+          throw x
+      }
     }
   }
   /** Performs an ITC call on the given host. */

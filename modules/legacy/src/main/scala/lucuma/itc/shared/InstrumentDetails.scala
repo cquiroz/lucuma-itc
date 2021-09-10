@@ -37,7 +37,36 @@ sealed trait InstrumentDetails
 // // TODO-GHOSTITC
 // final case class GhostParameters() extends InstrumentDetails
 //
-final case class GmosParameters(
+sealed trait GmosParameters extends InstrumentDetails {
+  def centralWavelength: Wavelength
+  def ampGain:           enum.GmosAmpGain
+  def ampReadMode:       enum.GmosAmpReadMode
+  def customSlitWidth:   Option[enum.GmosCustomSlitWidth]
+  def spatialBinning:    Int
+  def spectralBinning:   Int
+  def builtinROI:        enum.GmosRoi
+  def site:              enum.Site
+  def filterFileName: String
+  def addFilter: Boolean
+}
+
+final case class GmosSouthParameters(
+                     filter:            enum.GmosSouthFilter,
+                     grating:           enum.GmosSouthDisperser,
+                     centralWavelength: Wavelength,
+                     fpMask:            enum.GmosSouthFpu,
+                     ampGain:           enum.GmosAmpGain,
+                     ampReadMode:       enum.GmosAmpReadMode,
+                     customSlitWidth:   Option[enum.GmosCustomSlitWidth],
+                     spatialBinning:    Int,
+                     spectralBinning:   Int,
+                     ccdType:           enum.GmosSouthDetector,
+                     builtinROI:        enum.GmosRoi) extends GmosParameters {
+  val site = enum.Site.GS
+  val filterFileName: String = filter.longName
+}
+
+final case class GmosNorthParameters(
                      filter:            enum.GmosNorthFilter,
                      grating:           enum.GmosNorthDisperser,
                      centralWavelength: Wavelength,
@@ -47,33 +76,11 @@ final case class GmosParameters(
                      customSlitWidth:   Option[enum.GmosCustomSlitWidth],
                      spatialBinning:    Int,
                      spectralBinning:   Int,
-                     ccdType:           enum.GmosDetector,
-                     builtinROI:        enum.GmosRoi,
-                     site:              enum.Site) extends InstrumentDetails {
-    import edu.gemini.spModel.gemini.gmos.GmosCommonType
-    import edu.gemini.spModel.gemini.gmos.GmosNorthType
-
-    val legacyCcdType = ccdType match {
-      case enum.GmosDetector.E2V => GmosCommonType.DetectorManufacturer.E2V
-      case enum.GmosDetector.HAMAMATSU => GmosCommonType.DetectorManufacturer.HAMAMATSU
-    }
-
-    val legacySite = site match {
-      case enum.Site.GN => Site.GN
-      case enum.Site.GS => Site.GS
-    }
-
-    def legacyFpMak = fpMask match {
-      case enum.GmosNorthFpu.Ifu1 => GmosNorthType.FPUnitNorth.IFU_1
-      case enum.GmosNorthFpu.Ifu2 => GmosNorthType.FPUnitNorth.IFU_2
-      case enum.GmosNorthFpu.Ns5 => GmosNorthType.FPUnitNorth.NS_5
-    }
-
-    def legacyGrating = grating match {
-      case enum.GmosNorthDisperser.B480_G5309 => GmosNorthType.DisperserNorth.B480_G5309
-    }
-  }
-
+                     ccdType:           enum.GmosNorthDetector,
+                     builtinROI:        enum.GmosRoi) extends GmosParameters {
+  val site = enum.Site.GN
+  val filterFileName: String = filter.longName
+}
 //
 // final case class GnirsParameters(
 //                      pixelScale:        GNIRSParams.PixelScale,

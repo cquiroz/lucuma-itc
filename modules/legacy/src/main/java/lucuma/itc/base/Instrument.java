@@ -20,6 +20,7 @@ import java.util.List;
  */
 public abstract class Instrument {
 
+
     public enum Bands {
         VISIBLE("03-08"),
         NEAR_IR("1-5"),
@@ -214,6 +215,7 @@ public abstract class Instrument {
      *
      * @return Effective wavelength in nm
      */
+    // UPGRADE
     public abstract int getEffectiveWavelength();
 
     /**

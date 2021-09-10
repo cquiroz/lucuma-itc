@@ -54,7 +54,9 @@ class ItcServiceImpl extends ItcService {
     }
 
   } catch {
-    case e: Throwable => ItcResult.forException(e)
+    case e: Throwable =>
+      e.printStackTrace()
+      ItcResult.forException(e)
   }
 
   // === Imaging

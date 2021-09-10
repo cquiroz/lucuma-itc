@@ -91,7 +91,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
     }
 
     public ItcSpectroscopyResult serviceResult(final SpectroscopyResult[] r, final boolean headless) {
-        final List<scala.colltion.immutable.List<SpcChartData>> groups = new ArrayList<>();
+        final List<scala.collection.immutable.List<SpcChartData>> groups = new ArrayList<>();
         // The array specS2Narr represents the different IFUs, for each one we produce a separate set of charts.
         // For completeness: The result array holds the results for the different CCDs. For each CCD
         // the specS2Narr array holds the single result or the different IFU results. This should be made more obvious.
@@ -104,9 +104,9 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
             if ((!headless) && ((Gmos) r[0].instrument()).isIfu2()) {
                 charts.add(createSignalPixelChart(r, i));
             }
-            groups.add(CollectionConverters.asScala(charts));
+            groups.add(CollectionConverters.asScala(charts).toList());
         }
-        return Recipe$.MODULE$.serviceGroupedResult(r, CollectionConverters.asScala(groups), headless);
+        return Recipe$.MODULE$.serviceGroupedResult(r, CollectionConverters.asScala(groups).toList(), headless);
     }
 
     public SpectroscopyResult[] calculateSpectroscopy() {

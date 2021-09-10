@@ -51,7 +51,8 @@ object ItcServer {
           body <- req.as[ItcParameters].adaptErr {
             case x => x.printStackTrace();x
           }
-          resp <- Logger[F].warn(body.toString) *> Logger[F].info(service.calculate(body, true).toString) *> Ok(body.toString)
+          _ <- Logger[F].warn(service.calculate(body, true).toString)
+          resp <- Logger[F].warn(body.toString) *> Logger[F].warn(service.calculate(body, true).toString) *> Ok(body.toString)
         } yield resp
       //       for {
       //         body <- req.as[Json]

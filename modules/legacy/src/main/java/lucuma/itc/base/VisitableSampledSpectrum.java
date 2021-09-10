@@ -10,6 +10,7 @@ package lucuma.itc.base;
  * to allow visitors.
  */
 public interface VisitableSampledSpectrum extends SampledSpectrum {
+
     /**
      * The accept(SampledSpectrumVisitor) method is used by Visitors to
      * visit the SampledSpectrum.
