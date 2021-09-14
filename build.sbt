@@ -8,7 +8,7 @@ val http4sVersion = "0.23.0-RC1"
 val kindProjectorVersion = "0.13.0"
 val log4catsVersion = "2.1.1"
 val logbackVersion = "1.2.5"
-val lucumaCoreVersion = "0.12.4+25-e06e7433-SNAPSHOT"
+val lucumaCoreVersion = "0.13.1+1-a01bf3c8-SNAPSHOT"
 val coulombVersion        = "0.5.6"
 
 ThisBuild / Test / bspEnabled := false

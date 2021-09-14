@@ -10,13 +10,13 @@ import edu.gemini.spModel.gemini.gmos.GmosCommonType;
 public final class GmosGratingOptics extends GratingOptics {
 
     public GmosGratingOptics(final String directory,
-                             final GmosCommonType.Disperser grating,
+                             final String gratingName,
                              final Detector detector,
                              final double centralWavelength,
                              final int detectorPixels,
                              final int spectralBinning) {
 
-        super(directory, grating.name(), gratingsName(detector), centralWavelength, detectorPixels, spectralBinning);
+        super(directory, gratingName, gratingsName(detector), centralWavelength, detectorPixels, spectralBinning);
     }
 
     private static String gratingsName(final Detector detector) {

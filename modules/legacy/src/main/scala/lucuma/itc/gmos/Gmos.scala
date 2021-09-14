@@ -43,21 +43,21 @@ object Gmos { //Plate scales for original and Hamamatsu CCD's (temporary)
   }
 }
 
-abstract class Gmos(val gp: GmosParameters, val odp: ObservationDetails, val FILENAME: String, val detectorCcdIndex: Int) extends Instrument(Gmos.legacySite(gp.site), Instrument.Bands.VISIBLE, Gmos.INSTR_DIR, FILENAME) with BinningProvider with SpectroscopyInstrument {
+abstract class Gmos[D](val gp: GmosParameters[D], val odp: ObservationDetails, val FILENAME: String, val detectorCcdIndex: Int) extends Instrument(Gmos.legacySite(gp.site), Instrument.Bands.VISIBLE, Gmos.INSTR_DIR, FILENAME) with BinningProvider with SpectroscopyInstrument {
   val _detectorCcdIndex = detectorCcdIndex
   val _sampling = super.getSampling
+  val _Filter: Option[Filter]
+  val _gratingOptics: Option[GmosGratingOptics]
   // TODO: filter is not yet defined, need to work with filter from gp, clean this up
   // System.out.println(gp.filter.getClass.toString)
   // RESTORE
   // if (!gp.filter().equals(GmosNorthType.FilterNorth.NONE) && !gp.filter().equals(GmosSouthType.FilterSouth.NONE)) {
   // UPGRADE
-  val _Filter = Filter.fromWLFile(getPrefix, gp.filterFileName, getDirectory + "/")
-  addFilter(_Filter)
   // }
   val _fixedOptics = new FixedOptics(getDirectory + "/", getPrefix)
   addComponent(_fixedOptics)
   //Choose correct CCD QE curve
-  // gp.legacyCcdType match { // E2V, site dependent
+  // gp.ccdType match { // E2V, site dependent
   //   case E2V =>
   //     gp.legacySite match { // E2V for GN: gmos_n_E2V4290DDmulti3.dat      => EEV DD array
   //       case GN =>
@@ -134,7 +134,8 @@ abstract class Gmos(val gp: GmosParameters, val odp: ObservationDetails, val FIL
 //   def detectorPixels
 //
 //   /** {@inheritDoc } */
-//   override def getSlitWidth = if (gp.legacyFpMask.isIFU) 0.3
+  override def getSlitWidth = gp.slitWidth()
+    // if (gp.legacyFpMask.isIFU) 0.3
 //   else if (gp.customSlitWidth.isDefined) gp.customSlitWidth.get.width.toDoubleDegrees / 3600
 //   else gp.fpMask.slitWidth.get.toDoubleDegrees / 3600
 //
@@ -157,15 +158,21 @@ abstract class Gmos(val gp: GmosParameters, val odp: ObservationDetails, val FIL
 //     */
 //   def getDetectorCcdName = _detector.getName
 //
-//   /**
-//     * Returns the effective observing wavelength.
-//     * This is properly calculated as a flux-weighted averate of
-//     * observed spectrum.  So this may be temporary.
-//     *
-//     * @return Effective wavelength in nm
-//     */
-  override def getEffectiveWavelength = if (disperser.isEmpty) _Filter.getEffectiveWavelength.toInt
-  else _gratingOptics.getEffectiveWavelength.toInt
+  /**
+    * Returns the effective observing wavelength.
+    * This is properly calculated as a flux-weighted average of
+    * observed spectrum.  So this may be temporary.
+    *
+    * @return Effective wavelength in nm
+    */
+  override def getEffectiveWavelength =
+    (_gratingOptics, _Filter) match {
+      case (Some(g), None) => g.getEffectiveWavelength.toInt
+      case (None, Some(f)) => f.getEffectiveWavelength.toInt
+      case _ => ???
+    }
+  //   if (disperser.isEmpty) _Filter.getEffectiveWavelength.toInt
+  // else _gratingOptics.getEffectiveWavelength.toInt
 //
 //   def getGrating = gp.legacyGrating
 //
@@ -217,7 +224,7 @@ abstract class Gmos(val gp: GmosParameters, val odp: ObservationDetails, val FIL
 //
 //   def getGmosSaturLimitWarning = gmosSaturLimitWarning
 //
-//   def isIfu2
+  def isIfu2: Boolean
 //
 //   protected def createCcdArray
 //

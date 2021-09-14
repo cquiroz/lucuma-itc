@@ -1,6 +1,9 @@
 package lucuma.itc.shared
 
-import edu.gemini.spModel.core.Site
+import cats.data._
+import cats.syntax.all._
+import lucuma.itc.model.syntax.disperser._
+// import edu.gemini.spModel.core.Site
 // import edu.gemini.spModel.core.{Wavelength, Site}
 // import edu.gemini.spModel.data.YesNoType
 // import edu.gemini.spModel.gemini.acqcam.AcqCamParams
@@ -15,6 +18,8 @@ import edu.gemini.spModel.core.Site
 // import edu.gemini.spModel.gemini.trecs.TReCSParams
 import lucuma.core.enum
 import lucuma.core.math.Wavelength
+import lucuma.core.math.Angle
+import lucuma.core.math.syntax.int._
 
 /*
  * A collection of objects that define subsets of instrument configuration parameters
@@ -37,7 +42,7 @@ sealed trait InstrumentDetails
 // // TODO-GHOSTITC
 // final case class GhostParameters() extends InstrumentDetails
 //
-sealed trait GmosParameters extends InstrumentDetails {
+sealed trait GmosParameters[D] extends InstrumentDetails {
   def centralWavelength: Wavelength
   def ampGain:           enum.GmosAmpGain
   def ampReadMode:       enum.GmosAmpReadMode
@@ -46,13 +51,14 @@ sealed trait GmosParameters extends InstrumentDetails {
   def spectralBinning:   Int
   def builtinROI:        enum.GmosRoi
   def site:              enum.Site
-  def filterFileName: String
+  def ccdType:           D
+  def filterFileName: Option[String]
+  def slitWidth: Option[Angle]
   def addFilter: Boolean
 }
 
 final case class GmosSouthParameters(
-                     filter:            enum.GmosSouthFilter,
-                     grating:           enum.GmosSouthDisperser,
+                     filterGrating:            Ior[enum.GmosSouthFilter, enum.GmosSouthDisperser],
                      centralWavelength: Wavelength,
                      fpMask:            enum.GmosSouthFpu,
                      ampGain:           enum.GmosAmpGain,
@@ -61,14 +67,16 @@ final case class GmosSouthParameters(
                      spatialBinning:    Int,
                      spectralBinning:   Int,
                      ccdType:           enum.GmosSouthDetector,
-                     builtinROI:        enum.GmosRoi) extends GmosParameters {
+                     builtinROI:        enum.GmosRoi) extends GmosParameters[enum.GmosSouthDetector] {
   val site = enum.Site.GS
-  val filterFileName: String = filter.longName
+  val filterFileName: Option[String] = filterGrating.leftMap(_.longName).onlyLeft
+  def slitWidth = if (fpMask.isIFU) 300.milliarcseconds.some
+    else if (customSlitWidth.isDefined) customSlitWidth.map(_.width)
+    else fpMask.slitWidth
 }
 
 final case class GmosNorthParameters(
-                     filter:            enum.GmosNorthFilter,
-                     grating:           enum.GmosNorthDisperser,
+                     filterGrating:            Ior[enum.GmosNorthFilter, enum.GmosNorthDisperser],
                      centralWavelength: Wavelength,
                      fpMask:            enum.GmosNorthFpu,
                      ampGain:           enum.GmosAmpGain,
@@ -77,9 +85,12 @@ final case class GmosNorthParameters(
                      spatialBinning:    Int,
                      spectralBinning:   Int,
                      ccdType:           enum.GmosNorthDetector,
-                     builtinROI:        enum.GmosRoi) extends GmosParameters {
+                     builtinROI:        enum.GmosRoi) extends GmosParameters[enum.GmosNorthDetector] {
   val site = enum.Site.GN
-  val filterFileName: String = filter.longName
+  val filterFileName: Option[String] = filterGrating.leftMap(_.longName).onlyLeft
+  def slitWidth = if (fpMask.isIFU) 300.milliarcseconds.some
+    else if (customSlitWidth.isDefined) customSlitWidth.map(_.width)
+    else fpMask.slitWidth
 }
 //
 // final case class GnirsParameters(
@@ -161,7 +172,9 @@ object InstrumentDetails {
     // case _: GhostParameters           => true // TBD is this true?
     // case i: NiriParameters            => i.grism.equals(Niri.Disperser.NONE)
     // case i: TRecsParameters           => i.grating.equals(TReCSParams.Disperser.MIRROR)
-    case _: GmosParameters            =>
+    case _: GmosSouthParameters            =>
+      true
+    case _: GmosNorthParameters            =>
       true
       // i.grating.equals(GmosNorthType.DisperserNorth.MIRROR) ||
       // i.grating.equals(GmosSouthType.DisperserSouth.MIRROR)

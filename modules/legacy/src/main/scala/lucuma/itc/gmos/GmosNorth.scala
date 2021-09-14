@@ -3,6 +3,8 @@ package lucuma.itc.gmos
 import cats.syntax.all._
 import lucuma.itc.shared.{GmosNorthParameters, ObservationDetails}
 import lucuma.itc.base.Instrument
+import lucuma.itc.base.Filter
+import lucuma.itc.base.Detector
 import lucuma.core.enum.GmosNorthDetector
 import lucuma.core.enum.GmosAmpGain
 // import edu.gemini.spModel.gemini.gmos.GmosCommonType
@@ -31,12 +33,38 @@ object GmosNorth { // value taken from instrument's web documentation
   val DETECTOR_CCD_NAMES = Array("BB(B)", "HSC", "BB(R)");
 }
 
-final class GmosNorth(gnp: GmosNorthParameters, odp1: ObservationDetails, override val detectorCcdIndex: Int) extends Gmos(gnp, odp1, GmosNorth.FILENAME, detectorCcdIndex) {
+final class GmosNorth(gnp: GmosNorthParameters, odp1: ObservationDetails, override val detectorCcdIndex: Int) extends Gmos[GmosNorthDetector](gnp, odp1, GmosNorth.FILENAME, detectorCcdIndex) {
+  //Choose correct CCD QE curve
+  val (_detector, _instruments) = gnp.ccdType match { // E2V, site dependent
+    case GmosNorthDetector.E2V =>
+      val _detector = new Detector(getDirectory + "/", getPrefix, "E2V4290DDmulti3", "EEV DD array")
+      _detector.setDetectorPixels(detectorPixels)
+      (_detector, if (detectorCcdIndex == 0) Array[Gmos[GmosNorthDetector]](this) else Array())
 
-  // Yes, it is not a type, for this case it has to be Ifu1
-  override def isIfu2 = gnp.fpMask === GmosNorthFpu.Ifu1
+    // Hamamatsu, both sites: gmos_n_CCD-{R,G,B}.dat        =>  Hamamatsu (R,G,B)
+    case GmosNorthDetector.Hamamatsu =>
+      val fileName = getCcdFiles(detectorCcdIndex)
+      val name = getCcdNames(detectorCcdIndex)
+      val _detector = new Detector(getDirectory + "/", getPrefix, fileName, "Hamamatsu array", name)
+      _detector.setDetectorPixels(detectorPixels)
+      (_detector, if (detectorCcdIndex == 0) createCcdArray else Array())
+  }
 
-  override protected def createCcdArray = Array[Gmos](this, new GmosNorth(gnp, odp, 1), new GmosNorth(gnp, odp, 2))
+
+  val (_Filter, _gratingOptics) = gnp.filterGrating.fold( filter => {
+      val _Filter = Filter.fromWLFile(getPrefix, filter.longName, getDirectory + "/")
+      addFilter(_Filter)
+      (_Filter.some, none)
+    },grating => {
+      val _gratingOptics = new GmosGratingOptics(getDirectory + "/" + getPrefix, grating.longName, _detector, gp.centralWavelength.nanometer.value.toDouble, _detector.getDetectorPixels, gp.spectralBinning)
+      val _sampling = _gratingOptics.dispersion
+      addDisperser(_gratingOptics)
+      (none, _gratingOptics.some)
+    },(filter, grating) => {(none, none)})
+
+  override def isIfu2 = gnp.fpMask === GmosNorthFpu.Ifu2Slits
+
+  override protected def createCcdArray = Array[Gmos[GmosNorthDetector]](this, new GmosNorth(gnp, odp, 1), new GmosNorth(gnp, odp, 2))
 
   override protected def getPrefix = GmosNorth.INSTR_PREFIX
 
