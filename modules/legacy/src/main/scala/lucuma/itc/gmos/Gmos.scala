@@ -1,5 +1,6 @@
 package lucuma.itc.gmos
 
+import cats.syntax.all._
 import lucuma.itc.base.Instrument
 import lucuma.itc.base.SpectroscopyInstrument
 import lucuma.itc.base.BinningProvider
@@ -22,6 +23,7 @@ import edu.gemini.spModel.gemini.gmos.GmosCommonType
 import edu.gemini.spModel.gemini.gmos.GmosNorthType
 import edu.gemini.spModel.gemini.gmos.GmosSouthType
 import java.util
+import lucuma.core.math.Angle
 
 /**
   * Gmos specification class
@@ -134,7 +136,7 @@ abstract class Gmos[D](val gp: GmosParameters[D], val odp: ObservationDetails, v
 //   def detectorPixels
 //
 //   /** {@inheritDoc } */
-  override def getSlitWidth = gp.slitWidth()
+  override def getSlitWidth = gp.slitWidth.foldMap(Angle.signedDecimalArcseconds.get(_).toDouble)
     // if (gp.legacyFpMask.isIFU) 0.3
 //   else if (gp.customSlitWidth.isDefined) gp.customSlitWidth.get.width.toDoubleDegrees / 3600
 //   else gp.fpMask.slitWidth.get.toDoubleDegrees / 3600

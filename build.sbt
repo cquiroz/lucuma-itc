@@ -48,14 +48,9 @@ scalaVersion := "3.0.1"
 // """.lines.map(_.trim).map((s: String) => Cmd(s)).toSeq}
 //
 
-lazy val service = project
-  .in(file("modules/service"))
-  .dependsOn(legacy)
-  // .settings(commonSettings: _*)
+lazy val basic = project
+  .in(file("modules/basic"))
   .settings(commonLibSettings: _*)
-  // .settings(testkitLibSettings: _*)
-  // .jsSettings(commonModuleTest: _*)
-  // .jvmSettings(commonJVMSettings)
   .settings(
     libraryDependencies ++= Seq(
       "is.cir" %% "ciris" % cirisVersion,
@@ -63,11 +58,28 @@ lazy val service = project
       "org.http4s" %% "http4s-blaze-client" % http4sVersion,
       "org.http4s" %% "http4s-circe" % http4sVersion,
       "org.http4s" %% "http4s-dsl" % http4sVersion,
-      "org.typelevel" %% "log4cats-slf4j" % log4catsVersion,
-      "ch.qos.logback" % "logback-classic" % logbackVersion,
     )
   )
-
+// lazy val service = project
+//   .in(file("modules/service"))
+//   .dependsOn(legacy)
+//   // .settings(commonSettings: _*)
+//   .settings(commonLibSettings: _*)
+//   // .settings(testkitLibSettings: _*)
+//   // .jsSettings(commonModuleTest: _*)
+//   // .jvmSettings(commonJVMSettings)
+//   .settings(
+//     libraryDependencies ++= Seq(
+//       "is.cir" %% "ciris" % cirisVersion,
+//       "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+//       "org.http4s" %% "http4s-blaze-client" % http4sVersion,
+//       "org.http4s" %% "http4s-circe" % http4sVersion,
+//       "org.http4s" %% "http4s-dsl" % http4sVersion,
+//       "org.typelevel" %% "log4cats-slf4j" % log4catsVersion,
+//       "ch.qos.logback" % "logback-classic" % logbackVersion,
+//     )
+//   )
+//
 lazy val legacy = project
   .in(file("modules/legacy"))
   .settings(commonLibSettings: _*)
