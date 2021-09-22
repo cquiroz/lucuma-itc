@@ -4,6 +4,7 @@
 package lucuma.itc
 
 import cats.effect._
+import cats.effect.implicits._
 import cats.implicits._
 // import eu.timepit.refined._
 import lucuma.core.math.Angle
@@ -29,16 +30,16 @@ object ItcImpl {
 
   private val MaxPercentSaturation = 50.0
 
-  def forHeroku[F[_]: Async]: Resource[F, Itc[F]] =
+  def forHeroku[F[_]: Async: LiftIO]: Resource[F, Itc[F]] =
     forUri(uri"https://gemini-itc.herokuapp.com/json")
 
-  def forUri[F[_]: Async](uri: Uri): Resource[F, Itc[F]] =
+  def forUri[F[_]: Async: LiftIO](uri: Uri): Resource[F, Itc[F]] =
     AsyncHttpClient.resource[F](AsyncHttpClient.configure(_.setRequestTimeout(30000)))
       .map(RequestLogger(true, true))
       .map(ResponseLogger(true, true))
       .map(forClientAndUri[F](_, uri))
 
-  def forClientAndUri[F[_]: Concurrent](c: Client[F], uri: Uri): Itc[F] =
+  def forClientAndUri[F[_]: Concurrent: LiftIO](c: Client[F], uri: Uri): Itc[F] =
     new Itc[F] with Http4sClientDsl[F] {
 
       def calculate(
@@ -46,7 +47,6 @@ object ItcImpl {
         observingMode: ObservingMode,
         signalToNoise: Int
       ): F[Itc.Result] = {
-        println("impl")
         observingMode match {
           case _: ObservingMode.Spectroscopy =>
             spectroscopy(targetProfile, observingMode, signalToNoise)
@@ -68,8 +68,6 @@ object ItcImpl {
         // Convenience method to compute an OCS2 ITC result for the specified profile/mode.
         def itc(exposureDuration: FiniteDuration, exposures: Int): F[ItcResult] = {
           val json = spectroscopyParams(targetProfile, observingMode, exposureDuration, exposures).asJson
-          println("--------")
-          println(json.spaces2)
           c.expect(POST(json, uri))(jsonOf[F, ItcResult])
         }
 

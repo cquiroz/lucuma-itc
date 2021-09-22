@@ -39,8 +39,6 @@ object ItcService {
 
     new ItcService[F] {
 
-      implicitly[Parallel[F]]
-      implicitly[Parallel[F]]
       override def query(request: ParsedGraphQLRequest): F[Either[Throwable, Json]] =
 
         Dispatcher[F].use { implicit d =>
