@@ -30,7 +30,7 @@ object Main extends IOApp {
     repo: ItcRepo[F],
     cfg: Config
   ): Stream[F, Nothing] = {
-    val odbService   = ItcService[F](repo)
+    val itcService   = ItcService.service[F]
 
     def app(userClient: SsoClient[F, User]): HttpApp[F] =
       Logger.httpApp(logHeaders = true, logBody = false)((
@@ -38,8 +38,8 @@ object Main extends IOApp {
         // Routes for static resources, ie. GraphQL Playground
         resourceServiceBuilder[F]("/assets").toRoutes <+>
 
-        // Routes for the ODB GraphQL service
-        Routes.forService[F](odbService, userClient)
+          // Routes for the ITC GraphQL service
+          ItcService.routes[F](itcService)
 
       ).orNotFound)
 

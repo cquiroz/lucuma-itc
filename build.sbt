@@ -24,6 +24,7 @@ val refinedVersion              = "0.9.27"
 val sangriaVersion              = "2.1.3"
 val sangriaCirceVersion         = "1.3.2"
 val singletonOpsVersion         = "0.5.2"
+val grackleVersion              = "0.1.11"
 
 val munitVersion                = "0.7.29"
 val disciplineMunitVersion      = "1.0.9"
@@ -134,6 +135,9 @@ lazy val service = project
     ),
     libraryDependencies ++= Seq(
 //       "dev.optics"                 %% "monocle-core"              % monocleVersion,
+      "edu.gemini"     %% "gsp-graphql-core"   % grackleVersion,
+      "edu.gemini"     %% "gsp-graphql-generic"   % grackleVersion,
+      "edu.gemini"     %% "gsp-graphql-circe"   % grackleVersion,
       "co.fs2"                     %% "fs2-core"                  % fs2Version,
       "org.sangria-graphql"        %% "sangria"                   % sangriaVersion,
       "org.sangria-graphql"        %% "sangria-circe"             % sangriaCirceVersion,
@@ -152,7 +156,7 @@ lazy val service = project
       "is.cir"                     %% "ciris"                     % cirisVersion,
 //       "org.typelevel"              %% "jawn-parser"               % jawnVersion,
       "org.typelevel"              %% "log4cats-slf4j"            % log4catsVersion,
-//       "ch.qos.logback"             %  "logback-classic"           % logbackVersion,
+      "ch.qos.logback"             %  "logback-classic"           % logbackVersion,
       "org.http4s"                 %% "http4s-core"               % http4sVersion,
       "org.http4s"                 %% "http4s-blaze-server"       % http4sVersion,
       "org.http4s"                 %% "http4s-blaze-client"       % http4sVersion,
