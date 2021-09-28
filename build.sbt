@@ -135,6 +135,7 @@ lazy val core = project
       scalacOptions ++= Seq(
         "-Ymacro-annotations"
         ),
+        scalacOptions -= "-Vtype-diffs",
     libraryDependencies ++= Seq(
 //       "dev.optics"                 %% "monocle-core"              % monocleVersion,
       "edu.gemini"     %% "gsp-graphql-core"   % grackleVersion,
@@ -168,6 +169,6 @@ lazy val core = project
 //       "org.http4s"                 %% "http4s-circe"              % http4sVersion,
 //       "org.http4s"                 %% "http4s-dsl"                % http4sVersion,
 //       "edu.gemini"                 %% "clue-http4s-jdk-client"    % clueVersion            % Test,
-//       "org.typelevel"              %% "munit-cats-effect-3"       % munitCatsEffectVersion % Test,
+      "org.typelevel"              %% "munit-cats-effect-3"       % munitCatsEffectVersion % Test,
     ),
   ).enablePlugins(JavaAppPackaging)

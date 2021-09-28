@@ -1,0 +1,283 @@
+# Gaussian source angle in appropriate units
+input GaussianSourceAngleInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
+}
+
+type ItcError implements ItcResult {
+  # Message
+  msg: String!
+
+  # Result type
+  resultType: String!
+}
+
+# Possible itc result
+interface ItcResult {
+  # Result type
+  resultType: String!
+}
+
+type ItcSuccess implements ItcResult {
+  # Exposure time in milliseconds
+  exposureTime: Long!
+
+  # Exposures
+  exposures: Int!
+
+  # Signal/Noise ratio
+  signalToNoise: Int!
+
+  # Result type
+  resultType: String!
+}
+
+# Magnitude band
+enum MagnitudeBand {
+  # MagnitudeBand SloanU
+  SLOAN_U
+
+  # MagnitudeBand SloanG
+  SLOAN_G
+
+  # MagnitudeBand SloanR
+  SLOAN_R
+
+  # MagnitudeBand SloanI
+  SLOAN_I
+
+  # MagnitudeBand SloanZ
+  SLOAN_Z
+
+  # MagnitudeBand U
+  U
+
+  # MagnitudeBand B
+  B
+
+  # MagnitudeBand V
+  V
+
+  # MagnitudeBand Uc
+  UC
+
+  # MagnitudeBand R
+  R
+
+  # MagnitudeBand I
+  I
+
+  # MagnitudeBand Y
+  Y
+
+  # MagnitudeBand J
+  J
+
+  # MagnitudeBand H
+  H
+
+  # MagnitudeBand K
+  K
+
+  # MagnitudeBand L
+  L
+
+  # MagnitudeBand M
+  M
+
+  # MagnitudeBand N
+  N
+
+  # MagnitudeBand Q
+  Q
+
+  # MagnitudeBand Ap
+  AP
+}
+
+# Magnitude creation parameters
+input MagnitudeCreateInput {
+  band: MagnitudeBand!
+  value: BigDecimal!
+  error: BigDecimal
+  system: MagnitudeSystem = VEGA
+}
+
+# Magnitude system
+enum MagnitudeSystem {
+  # MagnitudeSystem Vega
+  VEGA
+
+  # MagnitudeSystem AB
+  AB
+
+  # MagnitudeSystem Jy
+  JY
+
+  # MagnitudeSystem Watts
+  WATTS
+
+  # MagnitudeSystem ErgsWavelength
+  ERGS_WAVELENGTH
+
+  # MagnitudeSystem ErgsFrequency
+  ERGS_FREQUENCY
+}
+
+type ObservingModeSpectroscopy {
+  # Wavelength in appropriate units
+  wavelength: Wavelength!
+
+  # Resolution
+  resolution: BigDecimal!
+}
+
+# An `Int` in the range from 1 to `Int.MaxValue`
+scalar PosInt
+
+type Query {
+  spectroscopy(
+    # Configuraton alternatives search parameters.
+    input: QueryConfigurationAlternativeSearchInput!
+  ): spectroscopyResult!
+}
+
+# Configuration alternatives query
+input QueryConfigurationAlternativeSearchInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput!
+
+  # Minimum desired simultaneous wavelength coverage.
+  simultaneousCoverage: WavelengthModelInput!
+
+  # Minimum desired resolution.
+  resolution: PosInt!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosInt!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput!
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpctralDistribution!
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeCreateInput!
+
+  # Target redshift.
+  redshift: BigDecimal!
+}
+
+type Result {
+  # Spectroscopy mode
+  mode: ObservingModeSpectroscopy!
+
+  # ITC results
+  itc: ItcResult!
+}
+
+# Spatial profile PointSource/UniformSource/GaussianSource
+input SpatialProfileModelInput {
+  # Spatial profile type: Point/Uniform/Gaussian
+  sourceType: SpatialProfileType!
+
+  # Full width half maximum (including seeing) in suitable units. Required for the Gaussian spatial profile, ignored otherwise.
+  fwhm: GaussianSourceAngleInput
+}
+
+# Spatial profile type: Point/Uniform/Gaussian
+enum SpatialProfileType {
+  # SpatialProfileType PointSource
+  POINT_SOURCE
+
+  # SpatialProfileType UniformSource
+  UNIFORM_SOURCE
+
+  # SpatialProfileType GaussianSource
+  GAUSSIAN_SOURCE
+}
+
+# Spectral distribution variant
+enum SpctralDistribution {
+  # SpctralDistribution BlackBody
+  BLACK_BODY
+
+  # SpctralDistribution PowerLaw
+  POWER_LAW
+
+  # SpctralDistribution Stellar
+  STELLAR
+
+  # SpctralDistribution NonStellar
+  NON_STELLAR
+}
+
+type Wavelength {
+  # Wavelength in pm
+  picometers: Int!
+
+  # Wavelength in Å
+  angstroms: BigDecimal!
+
+  # Wavelength in nm
+  nanometers: BigDecimal!
+
+  # Wavelength in µm
+  micrometers: BigDecimal!
+}
+
+# Decimal value in Wavelength
+input WavelengthDecimalInput {
+  # decimal value in associated units
+  value: BigDecimal!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Integral value in Wavelength
+input WavelengthLongInput {
+  # integral value in associated units
+  value: Long!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Wavelength, choose one of the available units
+input WavelengthModelInput {
+  picometers: Long
+  angstroms: BigDecimal
+  nanometers: BigDecimal
+  micrometers: BigDecimal
+  fromLong: WavelengthLongInput
+  fromDecimal: WavelengthDecimalInput
+}
+
+# Wavelength units
+enum WavelengthUnits {
+  # WavelengthUnits Picometers
+  PICOMETERS
+
+  # WavelengthUnits Angstroms
+  ANGSTROMS
+
+  # WavelengthUnits Nanometers
+  NANOMETERS
+
+  # WavelengthUnits Micrometers
+  MICROMETERS
+}
+
+type spectroscopyResult {
+  # Search results
+  results: [Result!]!
+}
+
+# The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
+scalar BigDecimal
+
+# The `Long` scalar type represents non-fractional signed whole numeric values. Long can represent values between -(2^63) and 2^63 - 1.
+scalar Long

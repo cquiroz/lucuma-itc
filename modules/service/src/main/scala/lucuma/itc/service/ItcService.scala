@@ -1,37 +1,20 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.api.service
+package lucuma.itc.service
 
-// import lucuma.odb.api.schema.ItcSchema
-// import lucuma.odb.api.repo.ItcRepo
-// import lucuma.odb.itc.Itc
-
-import cats._
 import cats.implicits._
 import cats.effect.Concurrent
 import io.circe._
-// import lucuma.core.model.User
-// import sangria.execution._
-// import sangria.marshalling.circe._
 import org.http4s.{ HttpRoutes, InvalidMessageBodyFailure, ParseFailure, QueryParamDecoder }
 import org.http4s.circe._
 import edu.gemini.grackle.Mapping
 import org.http4s.dsl.Http4sDsl
 import cats.effect.kernel.Async
-// import sangria.streaming
-// import sangria.streaming.SubscriptionStream
 
-// import scala.concurrent.ExecutionContext.Implicits.global
-// import scala.util.control.NonFatal
-// import scala.util.{Failure, Success}object StarWarsMapping extends GenericMapping[Id] {
 trait ItcService[F[_]] {
   def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json]
 
-  // def query(request: ParsedGraphQLRequest): F[Either[Throwable, Json]]
-  //
-  // def subscribe(user: Option[User], request: ParsedGraphQLRequest): F[Stream[F, Either[Throwable, Json]]]
-  //
 }
 
 object ItcService {
