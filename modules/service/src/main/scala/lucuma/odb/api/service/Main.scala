@@ -18,6 +18,7 @@ import org.http4s.server.middleware.Logger
 import org.http4s.server.staticcontent._
 import org.typelevel.log4cats.{Logger => Log4CatsLogger}
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import edu.gemini.grackle.Mapping
 
 import scala.concurrent.ExecutionContext.global
 import lucuma.odb.itc.Itc
@@ -27,10 +28,10 @@ import lucuma.odb.api.repo.ItcRepo
 object Main extends IOApp {
 
   def stream[F[_]: Log4CatsLogger: Parallel: Async: Itc](
-    repo: ItcRepo[F],
+    mapping: Mapping[F],
     cfg: Config
   ): Stream[F, Nothing] = {
-    val itcService   = ItcService.service[F]
+    val itcService   = ItcService.service[F](mapping)
 
     def app(userClient: SsoClient[F, User]): HttpApp[F] =
       Logger.httpApp(logHeaders = true, logBody = false)((
@@ -59,9 +60,9 @@ object Main extends IOApp {
     for {
       cfg  <- Config.fromCiris.load(Async[IO])
       log  <- Slf4jLogger.create[IO]
-      repo <- ItcRepo.create[IO]
+      map  <- ItcMapping[IO]
       _    <- ItcImpl.forHeroku[IO].use { itc =>
-        stream(repo, cfg)(log, Parallel[IO], Async[IO], itc).compile.drain
+        stream(map, cfg)(log, Parallel[IO], Async[IO], itc).compile.drain
       }
     } yield ExitCode.Success
 }

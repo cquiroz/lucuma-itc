@@ -16,7 +16,9 @@ import io.circe._
 // import sangria.marshalling.circe._
 import org.http4s.{ HttpRoutes, InvalidMessageBodyFailure, ParseFailure, QueryParamDecoder }
 import org.http4s.circe._
+import edu.gemini.grackle.Mapping
 import org.http4s.dsl.Http4sDsl
+import cats.effect.kernel.Async
 // import sangria.streaming
 // import sangria.streaming.SubscriptionStream
 
@@ -71,69 +73,11 @@ object ItcService {
     }
   }
 
-  def service[F[_]: Applicative]: ItcService[F] =
+  def service[F[_]: Async](mapping: Mapping[F]): ItcService[F] =
     new ItcService[F]{
-      def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json] =
-        ItcMapping.compileAndRun(query, op, vars).pure[F]
+      def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json] = {
+        mapping.compileAndRun(query, op, vars)
+      }
     }
 
-  // def apply[F[_]: Parallel: Async: Itc: Logger](repo: ItcRepo[F]): ItcService[F] =
-  //
-  //   new ItcService[F] {
-  //
-  //     override def query(request: ParsedGraphQLRequest): F[Either[Throwable, Json]] =
-  //
-  //       Dispatcher[F].use { implicit d =>
-  //         Async[F].async_ { (cb: Either[Throwable, Json] => Unit) =>
-  //           Executor.execute(
-  //             schema           = ItcSchema[F],
-  //             queryAst         = request.query,
-  //             userContext      = repo,
-  //             operationName    = request.op,
-  //             variables        = request.vars.getOrElse(Json.fromJsonObject(JsonObject())),
-  //             exceptionHandler = ItcSchema.exceptionHandler
-  //           ).onComplete {
-  //             case Success(value) => cb(Right(value))
-  //             case Failure(error) => cb(Left(error))
-  //           }
-  //         }.attempt
-  //       }
-  //
-  //     override def subscribe(
-  //       user:    Option[User],
-  //       request: ParsedGraphQLRequest
-  //     ): F[Stream[F, Either[Throwable, Json]]] =
-  //       ???
-  //       // Stream.empty[Either[Throwable, Json]].covary[F].pure[F]
-  //       // cats.Applicative[F].u
-  //
-  //       // implicit def subStream(implicit D: Dispatcher[F]): SubscriptionStream[Stream[F, *]] =
-  //       //   streaming.fs2.fs2SubscriptionStream[F](D, Async[F])
-  //       //
-  //       // import sangria.execution.ExecutionScheme.Stream
-  //       //
-  //       // Dispatcher[F].use { implicit d =>
-  //       //   Async[F].fromFuture {
-  //       //     Async[F].delay {
-  //       //       Executor.prepare(
-  //       //         schema = ItcSchema[F](),
-  //       //         queryAst = request.query,
-  //       //         // userContext = odb,
-  //       //         operationName = request.op,
-  //       //         variables = request.vars.getOrElse(Json.fromJsonObject(JsonObject())),
-  //       //         exceptionHandler = ItcSchema.exceptionHandler
-  //       //       ).map { preparedQuery =>
-  //       //         preparedQuery
-  //       //           .execute()
-  //       //           .evalTap(n => info(user, s"Subscription event: ${n.printWith(Printer.spaces2)}"))
-  //       //           .map(_.asRight[Throwable])
-  //       //           .recover { case NonFatal(error) => error.asLeft[Json] }
-  //       //       }
-  //       //     }
-  //       //   }
-  //       // }
-  //
-  //     // }
-  //
-  //   }
 }
