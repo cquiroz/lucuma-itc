@@ -36,7 +36,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             .withEntity(Json.obj("query" -> Json.fromString(query)))
         )
       }
-      .flatMap(_.as[Json]) //compile.toVector)
+      .flatMap(_.as[Json])
       .assertEquals(expected)
 
   test("multiple wv units") {
@@ -75,7 +75,97 @@ class GraphQLSuite extends munit.CatsEffectSuite {
         }
         """,
       json"""{
-        "errors": [{"message": "Multiple defined wavelength values"}]
+        "errors": [
+          {"message": "Wavelength defined with multiple units {picometers, nanometers}"},
+          {"message": "Type Query has no field 'results'"}
+        ]
+      }"""
+    )
+  }
+
+  test("bad redshift") {
+    query(
+      """
+        query {
+          spectroscopy(input: {
+            wavelength: {
+              picometers: 300
+            },
+            redshift: "0.1",
+            simultaneousCoverage: {
+              nanometers: 200
+            },
+            resolution: 10,
+            signalToNoise: 2,
+            spatialProfile: {
+              sourceType: POINT_SOURCE
+            },
+            spectralDistribution: STELLAR,
+            magnitude: {
+              band: Y,
+              system: AB,
+              value: 5
+            }
+          }) {
+            results {
+              itc {
+                ... on ItcSuccess {
+                  exposureTime
+                }
+              }
+            }
+          }
+        }
+        """,
+      json"""{
+        "errors": [
+          {"message": "Redshift value is not valid StringValue(0.1)"}
+        ]
+      }"""
+    )
+  }
+
+  test("bad redshift and wavelength") {
+    query(
+      """
+        query {
+          spectroscopy(input: {
+            wavelength: {
+              picometers: 300,
+              nanometers: 200
+            },
+            redshift: "0.1",
+            simultaneousCoverage: {
+              nanometers: 200
+            },
+            resolution: 10,
+            signalToNoise: 2,
+            spatialProfile: {
+              sourceType: POINT_SOURCE
+            },
+            spectralDistribution: STELLAR,
+            magnitude: {
+              band: Y,
+              system: AB,
+              value: 5
+            }
+          }) {
+            results {
+              itc {
+                ... on ItcSuccess {
+                  exposureTime
+                }
+              }
+            }
+          }
+        }
+        """,
+      json"""{
+        "errors": [
+          {"message": "Wavelength defined with multiple units {picometers, nanometers}"},
+          {"message": "Redshift value is not valid StringValue(0.1)"},
+          {"message": "Type Query has no field 'results'"}
+        ]
       }"""
     )
   }
@@ -130,7 +220,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
                   }
                 },
                 "itc": {
-                  "exposures": 10
+                    "exposures": 10
                 }
               }
             ]

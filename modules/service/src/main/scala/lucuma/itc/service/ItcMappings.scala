@@ -44,14 +44,24 @@ trait Encoders {
   implicit val encoderItcResult: Encoder[Itc.Result] = Encoder.instance {
     case f: Itc.Result.Success =>
       Json.obj(("resultType", Json.fromString("Success"))).deepMerge(f.asJson)
+    case Itc.Result.SourceTooBright(m) =>
+      Json.obj(("resultType", Json.fromString("Error")),
+               ("message", Json.fromString(s"Source too bright $m"))
+      )
   }
 
   implicit val encoderWavelength: Encoder[Wavelength] = new Encoder[Wavelength] {
     final def apply(w: Wavelength): Json = Json.obj(
       ("picometers", Json.fromInt(w.toPicometers.value.value)),
+      ("angstrom", Json.fromBigDecimal(w.angstrom.value.toBigDecimal(2, RoundingMode.CEILING))),
       ("nanometers",
        Json.fromBigDecimal(
          w.nanometer.value.toBigDecimal(2, RoundingMode.CEILING)
+       )
+      ),
+      ("micrometers",
+       Json.fromBigDecimal(
+         w.micrometer.value.toBigDecimal(2, RoundingMode.CEILING)
        )
       )
     )
@@ -104,7 +114,8 @@ object ItcMapping extends Encoders {
   def computeItc[F[_]: Applicative](env: Cursor.Env): F[Result[SpectroscopyResults]] = {
     println(env)
     println("abc1")
-    println(env.get[Int]("wavelength"))
+    println(env.get[Wavelength]("wavelength"))
+    println(env.get[Redshift]("redshift"))
     println("abc")
     SpectroscopyResults(
       List(
@@ -119,6 +130,24 @@ object ItcMapping extends Encoders {
       )
     ).rightIor.pure[F]
   }
+  // def parseRedshift(units: List[(String, Value)]): Option[Wavelength] =
+  def parseWavelength(units: List[(String, Value)]): Option[Wavelength] =
+    units.find(_._2 != Value.AbsentValue) match {
+      case Some(("picometers", IntValue(n))) =>
+        Wavelength.fromPicometers.getOption(n)
+      case Some(("angstroms", IntValue(n))) =>
+        Wavelength.decimalAngstroms.getOption(BigDecimal(n))
+      case Some(("angstroms", FloatValue(n))) =>
+        Wavelength.decimalAngstroms.getOption(BigDecimal(n))
+      case Some(("nanometers", IntValue(n))) =>
+        Wavelength.decimalNanometers.getOption(BigDecimal(n))
+      case Some(("nanometers", FloatValue(n))) =>
+        Wavelength.decimalNanometers.getOption(BigDecimal(n))
+      case Some(("micrometers", IntValue(n))) =>
+        Wavelength.decimalMicrometers.getOption(BigDecimal(n))
+      case Some(("micrometers", FloatValue(n))) =>
+        Wavelength.decimalMicrometers.getOption(BigDecimal(n))
+    }
 
   def apply[F[_]: Sync]: F[Mapping[F]] =
     loadSchema[F].map { loadedSchema =>
@@ -128,6 +157,8 @@ object ItcMapping extends Encoders {
         val QueryType              = schema.ref("Query")
         val SpectroscopyResultType = schema.ref("spectroscopyResult")
         val BigDecimalType         = schema.ref("BigDecimal")
+        val ItcSuccessType         = schema.ref("ItcSucces")
+
         val typeMappings =
           List(
             ObjectMapping(
@@ -139,18 +170,36 @@ object ItcMapping extends Encoders {
                 )
               )
             ),
-            LeafMapping[BigDecimal](BigDecimalType)
+            LeafMapping[BigDecimal](BigDecimalType),
+            LeafMapping[Itc.Result.Success](ItcSuccessType)
           )
         override val selectElaborator = new SelectElaborator(Map(QueryType -> {
-          case s @ Select("spectroscopy", List(Binding("input", ObjectValue(wv))), child) =>
+          case Select("spectroscopy", List(Binding("input", ObjectValue(wv))), child) =>
             wv.foldLeft(Environment(Cursor.Env(), child).rightIor[NonEmptyChain[Problem]]) {
-              case (_, ("wavelength", ObjectValue(units)))
+              case (i, ("redshift", FloatValue(r))) =>
+                val rs = Redshift(r)
+                i.map(e => e.copy(env = e.env.add(("redshift", rs))))
+              case (i, ("redshift", IntValue(r))) =>
+                val rs = Redshift(r)
+                i.map(e => e.copy(env = e.env.add(("redshift", rs))))
+              case (i, ("redshift", v)) =>
+                i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
+              case (i, ("wavelength", ObjectValue(units)))
                   if units.filter(_._2 != Value.AbsentValue).length != 1 =>
-                NonEmptyChain.of(Problem("Multiple defined wavelength values")).leftIor[Environment]
-              case (i, ("wavelength", ObjectValue(units))) if units.length != 1 =>
-                i.map(e =>
-                  e.copy(env = e.env.add(("wavelength", 1)), Select("spectroscopy", Nil, child))
+                val presentUnits =
+                  units.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
+                i.addLeft(
+                  NonEmptyChain.of(Problem(s"Wavelength defined with multiple units $presentUnits"))
                 )
+              case (i, ("wavelength", ObjectValue(units))) =>
+                val wavelength: Option[Wavelength] = parseWavelength(units)
+                wavelength
+                  .map { w =>
+                    i.map(e =>
+                      e.copy(env = e.env.add(("wavelength", w)), Select("spectroscopy", Nil, child))
+                    )
+                  }
+                  .getOrElse(i)
               case (e, _) => e
             }
         }))
