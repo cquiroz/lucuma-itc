@@ -50,7 +50,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             },
             redshift: 0.1,
             simultaneousCoverage: {
-              nanometers: 200
+              picometers: 200
             },
             resolution: 10,
             signalToNoise: 2,
@@ -76,8 +76,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
         """,
       json"""{
         "errors": [
-          {"message": "Wavelength defined with multiple units {picometers, nanometers}"},
-          {"message": "Type Query has no field 'results'"}
+          {"message": "Wavelength defined with multiple units {picometers, nanometers}"}
         ]
       }"""
     )
@@ -93,7 +92,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             },
             redshift: "0.1",
             simultaneousCoverage: {
-              nanometers: 200
+              picometers: 200
             },
             resolution: 10,
             signalToNoise: 2,
@@ -106,7 +105,8 @@ class GraphQLSuite extends munit.CatsEffectSuite {
               system: AB,
               value: 5
             }
-          }) {
+          })
+          {
             results {
               itc {
                 ... on ItcSuccess {
@@ -136,7 +136,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             },
             redshift: "0.1",
             simultaneousCoverage: {
-              nanometers: 200
+              picometers: 200
             },
             resolution: 10,
             signalToNoise: 2,
@@ -163,8 +163,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
       json"""{
         "errors": [
           {"message": "Wavelength defined with multiple units {picometers, nanometers}"},
-          {"message": "Redshift value is not valid StringValue(0.1)"},
-          {"message": "Type Query has no field 'results'"}
+          {"message": "Redshift value is not valid StringValue(0.1)"}
         ]
       }"""
     )
@@ -186,6 +185,71 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             signalToNoise: 2,
             spatialProfile: {
               sourceType: POINT_SOURCE
+            },
+            spectralDistribution: STELLAR,
+            magnitude: {
+              band: Y,
+              system: AB,
+              value: 5
+            }
+          }) {
+            results {
+              mode {
+                wavelength {
+                  picometers
+                }
+              }
+              itc {
+                ... on ItcSuccess {
+                  exposures
+                }
+              }
+            }
+          }
+        }
+        """,
+      json"""
+        {
+          "data": {
+            "spectroscopy": {
+              "results": [
+                {
+                  "mode": {
+                    "wavelength": {
+                      "picometers": 1000
+                    }
+                  },
+                  "itc": {
+                      "exposures": 10
+                  }
+                }
+              ]
+            }
+          }
+        }
+      """
+    )
+  }
+
+  test("gaussian source") {
+    query(
+      """
+        query {
+          spectroscopy(input: {
+            wavelength: {
+              nanometers: 60,
+            },
+            redshift: 0.1,
+            simultaneousCoverage: {
+              nanometers: 200
+            },
+            resolution: 10,
+            signalToNoise: 2,
+            spatialProfile: {
+              sourceType: GAUSSIAN_SOURCE,
+              fwhm: {
+                microarcseconds: 1000
+              }
             },
             spectralDistribution: STELLAR,
             magnitude: {
