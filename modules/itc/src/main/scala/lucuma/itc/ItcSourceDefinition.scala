@@ -9,15 +9,14 @@ package lucuma.itc
 import lucuma.core.enum._
 import lucuma.core.math.Redshift
 import lucuma.core.math.MagnitudeValue
-import lucuma.odb.api.model.SpatialProfile
 import lucuma.odb.api.model.enum.SurfaceBrightness
 import lucuma.odb.search.TargetProfile
 import io.circe.{ Encoder, Json }
 import io.circe.syntax._
 import io.circe.generic.semiauto._
 import lucuma.core.math.Angle
+import lucuma.core.model.SpatialProfile
 import lucuma.odb.api.model.SpectralDistribution
-// import lucuma.odb.api.model.SpectralDistribution
 
 final case class ItcSourceDefinition(
   profile:      SpatialProfile,
@@ -38,7 +37,7 @@ object ItcSourceDefinition {
       p.spatialProfile match {
         case SpatialProfile.GaussianSource(_) => Left(p.magnitude.system)
         case SpatialProfile.PointSource       => Left(p.magnitude.system)
-        case SpatialProfile.UniformSource     =>
+        case SpatialProfile.UniformSource =>
           Right {
             p.magnitude.system match {
               case MagnitudeSystem.Vega => SurfaceBrightness.Vega
@@ -56,11 +55,13 @@ object ItcSourceDefinition {
       import SpatialProfile._
       def apply(a: SpatialProfile): Json =
         a match {
-          case PointSource           => Json.obj("PointSource"    -> Json.obj())
-          case UniformSource         => Json.obj("UniformSource"  -> Json.obj())
+          case PointSource   => Json.obj("PointSource" -> Json.obj())
+          case UniformSource => Json.obj("UniformSource" -> Json.obj())
           case g @ GaussianSource(_) =>
             Json.obj(
-              "GaussianSource" -> Json.obj("fwhm" -> Angle.signedDecimalArcseconds.get(g.fwhm).asJson)
+              "GaussianSource" -> Json.obj(
+                "fwhm" -> Angle.signedDecimalArcseconds.get(g.fwhm).asJson
+              )
             )
         }
     }
@@ -70,10 +71,16 @@ object ItcSourceDefinition {
       import SpectralDistribution._
       def apply(a: SpectralDistribution): Json =
         a match {
-          case BlackBody(t)       => Json.obj("BlackBody" -> Json.obj("temperature"    -> Json.fromDoubleOrNull(t)))
-          case PowerLaw(i)        => Json.obj("PowerLaw"  -> Json.obj("index"          -> Json.fromDoubleOrNull(i)))
-          case Library(Left(s))   => Json.obj("Library"   -> Json.obj("LibraryStar"    -> Json.fromString(s.ocs2Tag)))
-          case Library(Right(ns)) => Json.obj("Library"   -> Json.obj("LibraryNonStar" -> Json.fromString(ns.ocs2Tag)))
+          case BlackBody(t) =>
+            Json.obj(
+              "BlackBody" -> Json.obj("temperature" -> Json.fromDoubleOrNull(t.value.value.toDouble))
+            )
+          case PowerLaw(i) =>
+            Json.obj("PowerLaw" -> Json.obj("index" -> Json.fromDoubleOrNull(i.toDouble)))
+          case Library(Left(s)) =>
+            Json.obj("Library" -> Json.obj("LibraryStar" -> Json.fromString(s.ocs2Tag)))
+          case Library(Right(ns)) =>
+            Json.obj("Library" -> Json.obj("LibraryNonStar" -> Json.fromString(ns.ocs2Tag)))
         }
     }
 
@@ -81,7 +88,7 @@ object ItcSourceDefinition {
     new Encoder[Either[MagnitudeSystem, SurfaceBrightness]] {
       def apply(a: Either[MagnitudeSystem, SurfaceBrightness]): Json =
         a match {
-          case Left(ms)  => Json.obj("MagnitudeSystem"   -> Json.fromString(ms.tag))
+          case Left(ms)  => Json.obj("MagnitudeSystem" -> Json.fromString(ms.tag))
           case Right(sb) => Json.obj("SurfaceBrightness" -> Json.fromString(sb.ocs2Tag))
         }
     }

@@ -3,17 +3,20 @@
 
 package lucuma.odb.api.model
 
-import lucuma.odb.api.model.enum.{ StellarLibrarySpectrum, NonStellarLibrarySpectrum }
+import lucuma.odb.api.model.enum.{ NonStellarLibrarySpectrum, StellarLibrarySpectrum }
+import coulomb.Quantity
+import coulomb.si.Kelvin
+import eu.timepit.refined.types.numeric.PosBigDecimal
 
 sealed trait SpectralDistribution extends Serializable
 
 object SpectralDistribution {
 
   /** A black body with a temperature in Kelvin. */
-  final case class BlackBody(temperature: Double) extends SpectralDistribution
+  final case class BlackBody(temperature: Quantity[PosBigDecimal, Kelvin]) extends SpectralDistribution
 
   /** Defined by power law function. */
-  final case class PowerLaw(index: Double) extends SpectralDistribution
+  final case class PowerLaw(index: BigDecimal) extends SpectralDistribution
 
   /** A library defined spectrum. */
   final case class Library(

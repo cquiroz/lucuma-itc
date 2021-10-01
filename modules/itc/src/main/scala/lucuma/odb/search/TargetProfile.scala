@@ -5,8 +5,8 @@ package lucuma.odb.search
 
 import lucuma.core.math.Redshift
 import lucuma.core.model.Magnitude
-import lucuma.odb.api.model.SpatialProfile
 import lucuma.odb.api.model.SpectralDistribution
+import lucuma.core.model.SpatialProfile
 
 /** Target properties we need to know at phase zero. */
 final case class TargetProfile(
@@ -15,4 +15,3 @@ final case class TargetProfile(
   magnitude:            Magnitude,
   redshift:             Redshift
 )
-

@@ -32,6 +32,13 @@ import eu.timepit.refined._
 import eu.timepit.refined.numeric.Positive
 import lucuma.core.math.Angle
 import lucuma.core.model.SpatialProfile
+import lucuma.odb.api.model.SpectralDistribution
+import coulomb.refined._
+import coulomb.si.Kelvin
+import monocle.std.these._
+import monocle.Focus
+import lucuma.odb.api.model.enum.StellarLibrarySpectrum
+import lucuma.odb.api.model.enum.NonStellarLibrarySpectrum
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -113,6 +120,14 @@ object ItcMapping extends Encoders {
       self.addLeft(NonEmptyChain.of(Problem(problem)))
   }
 
+  implicit class StringOps(val self: String) extends AnyVal {
+    def fromScreamingSnakeCase: String =
+      self.split("_").map(_.toLowerCase.capitalize).mkString("")
+  }
+  def cursorEnv[A] = theseRight[A, Environment].andThen(Focus[Environment](_.env))
+  def cursorEnvAdd[A, B](key: String, value: B): Ior[A, Environment] => Ior[A, Environment] =
+    cursorEnv[A].modify(_.add((key, value)))
+
   // In principle this is a pure operation because resources are constant values, but the potential
   // for error in dev is high and it's nice to handle failures in `F`.
   def loadSchema[F[_]: Sync]: F[Schema] =
@@ -128,6 +143,8 @@ object ItcMapping extends Encoders {
     println(env.get[types.numeric.PosInt]("resolution"))
     println(env.get[types.numeric.PosInt]("signalToNoise"))
     println(env.get[SpatialProfile]("spatialProfile"))
+    println(env.get[SpectralDistribution]("spectralDistribution"))
+    println(env)
     SpectroscopyResults(
       List(
         Spectroscopy(
@@ -243,18 +260,14 @@ object ItcMapping extends Encoders {
                   // resolution
                   case (i, ("resolution", IntValue(r))) if r > 0 =>
                     refineV[Positive](r)
-                      .fold(i.addProblem,
-                            v => i.map(e => e.copy(env = e.env.add(("resolution", v))))
-                      )
+                      .fold(i.addProblem, v => cursorEnvAdd("resolution", v)(i))
                   case (i, ("resolution", v)) =>
                     i.addProblem(s"Not valid resolution value $v")
 
                   // signalToNoise
                   case (i, ("signalToNoise", IntValue(r))) if r > 0 =>
                     refineV[Positive](r)
-                      .fold(i.addProblem,
-                            v => i.map(e => e.copy(env = e.env.add(("signalToNoise", v))))
-                      )
+                      .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
                   case (i, ("signalToNoise", v)) =>
                     i.addProblem(s"Not valid signalToNoise value $v")
 
@@ -281,15 +294,54 @@ object ItcMapping extends Encoders {
                           ) :: Nil if fwhm.filter(_._2 != Value.AbsentValue).length === 1 =>
                         parseFwhw(fwhm).map(SpatialProfile.GaussianSource(_))
                       case _ => none
-                    }).map(sp => i.map(e => e.copy(env = e.env.add(("spatialProfile", sp)))))
+                    }).map(sp => cursorEnvAdd("spatialProfile", sp)(i))
                       .getOrElse(i.addProblem("Cannot parse spatialProfile"))
-
                   case (i, ("spatialProfile", _)) =>
                     i.addProblem("Cannot parse spatialProfile")
 
-                  case (i, ("spectralDistribution", v)) =>
-                    println(v)
-                    i.addProblem("Cannot parse spectralDistribution")
+                  // spectralDistribution
+                  case (i, ("spectralDistribution", ObjectValue(sd)))
+                      if sd.filter(_._2 != Value.AbsentValue).length === 1 =>
+                    sd.filter(_._2 != Value.AbsentValue) match {
+                      case ("blackBody", ObjectValue(List(("temperature", IntValue(v))))) :: Nil
+                          if v > 0 =>
+                        val blackBody = SpectralDistribution.BlackBody(
+                          BigDecimal(v).withRefinedUnit[Positive, Kelvin]
+                        )
+                        cursorEnvAdd("spectralDistribution", blackBody)(i)
+                      case ("blackBody", ObjectValue(List(("temperature", FloatValue(v))))) :: Nil
+                          if v > 0 =>
+                        val blackBody = SpectralDistribution.BlackBody(
+                          BigDecimal(v).withRefinedUnit[Positive, Kelvin]
+                        )
+                        cursorEnvAdd("spectralDistribution", blackBody)(i)
+                      case ("powerLaw", ObjectValue(List(("index", IntValue(pl))))) :: Nil
+                          if pl > 0 =>
+                        val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
+                        cursorEnvAdd("spectralDistribution", powerLaw)(i)
+                      case ("powerLaw", ObjectValue(List(("index", FloatValue(pl))))) :: Nil
+                          if pl > 0 =>
+                        val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
+                        cursorEnvAdd("spectralDistribution", powerLaw)(i)
+                      case ("stellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil =>
+                        StellarLibrarySpectrum
+                          .fromTag(s.fromScreamingSnakeCase)
+                          .orElse(StellarLibrarySpectrum.fromTag(s))
+                          .map(s => cursorEnvAdd("spectralDistribution", s)(i))
+                          .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
+                      case ("nonStellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil =>
+                        NonStellarLibrarySpectrum
+                          .fromTag(s.fromScreamingSnakeCase)
+                          .orElse(NonStellarLibrarySpectrum.fromTag(s))
+                          .map(s => cursorEnvAdd("spectralDistribution", s)(i))
+                          .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
+                      case _ =>
+                        i.addProblem("Cannot parse spatialDistribution")
+                    }
+                  case (i, ("spectralDistribution", ObjectValue(sd))) =>
+                    val v = sd.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
+                    i.addProblem(s"Spectral distribution value is not valid $v")
+
                   // redshift
                   case (i, ("redshift", FloatValue(r))) =>
                     val rs = Redshift(r)
