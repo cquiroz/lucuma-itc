@@ -1,13 +1,13 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.search
+package lucuma.itc.search
 
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
-import lucuma.odb.search.syntax.gmosnorthdisperser._
-import lucuma.odb.search.syntax.gmosnorthfpu._
-import lucuma.odb.search.syntax.gmosnorthfilter._
+import lucuma.itc.search.syntax.gmosnorthdisperser._
+import lucuma.itc.search.syntax.gmosnorthfpu._
+import lucuma.itc.search.syntax.gmosnorthfilter._
 import spire.math.Rational
 
 sealed trait ObservingMode {

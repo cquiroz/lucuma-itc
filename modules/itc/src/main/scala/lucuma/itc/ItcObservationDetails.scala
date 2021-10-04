@@ -4,7 +4,7 @@
 package lucuma.itc
 
 import lucuma.core.math.Angle
-import lucuma.odb.api.model.syntax.finiteduration._
+import lucuma.itc.syntax.finiteduration._
 import io.circe._
 import io.circe.syntax._
 import io.circe.generic.semiauto._

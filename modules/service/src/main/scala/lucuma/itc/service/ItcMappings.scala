@@ -17,11 +17,11 @@ import io.circe.Encoder
 import scala.util.Using
 import scala.io.Source
 import cats.effect.{ Unique => _, _ }
-import lucuma.odb.search.SpectroscopyResults
-import lucuma.odb.search.Result.Spectroscopy
-import lucuma.odb.search.ObservingMode
-import lucuma.odb.search.ObservingMode.Spectroscopy.GmosNorth
-import lucuma.odb.itc.Itc
+import lucuma.itc.search.SpectroscopyResults
+import lucuma.itc.search.Result.Spectroscopy
+import lucuma.itc.search.ObservingMode
+import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
+import lucuma.itc.Itc
 import lucuma.core.math.Wavelength
 import scala.concurrent.duration._
 import lucuma.core.enum.GmosNorthDisperser
@@ -32,13 +32,13 @@ import eu.timepit.refined._
 import eu.timepit.refined.numeric.Positive
 import lucuma.core.math.Angle
 import lucuma.core.model.SpatialProfile
-import lucuma.odb.api.model.SpectralDistribution
+import lucuma.core.model.SpectralDistribution
 import coulomb.refined._
 import coulomb.si.Kelvin
 import monocle.std.these._
 import monocle.Focus
-import lucuma.odb.api.model.enum.StellarLibrarySpectrum
-import lucuma.odb.api.model.enum.NonStellarLibrarySpectrum
+import lucuma.core.enum.StellarLibrarySpectrum
+import lucuma.core.enum.NonStellarLibrarySpectrum
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.Magnitude
 import lucuma.core.math.MagnitudeValue

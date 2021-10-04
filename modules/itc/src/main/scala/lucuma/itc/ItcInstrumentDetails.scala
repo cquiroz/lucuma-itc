@@ -4,7 +4,7 @@
 package lucuma.itc
 
 import lucuma.core.math.Wavelength
-import lucuma.odb.search.ObservingMode
+import lucuma.itc.search.ObservingMode
 import io.circe.{ Encoder, Json }
 
 final case class ItcInstrumentDetails(mode: ObservingMode)

@@ -1,10 +1,10 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.search.syntax
+package lucuma.itc.search.syntax
 
 import eu.timepit.refined.auto._
-import lucuma.odb.search.Coverage
+import lucuma.itc.search.Coverage
 import lucuma.core.enum.GmosNorthDisperser
 import lucuma.core.enum.GmosNorthDisperser._
 import lucuma.core.math.{ Angle, Wavelength }

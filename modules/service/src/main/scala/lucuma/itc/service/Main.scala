@@ -17,7 +17,7 @@ import org.http4s.server.staticcontent._
 import edu.gemini.grackle.Mapping
 
 import scala.concurrent.ExecutionContext.global
-import lucuma.odb.itc.Itc
+import lucuma.itc.Itc
 
 // #server
 object Main extends IOApp {

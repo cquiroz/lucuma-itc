@@ -1,9 +1,9 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.itc
+package lucuma.itc
 
-import lucuma.odb.search._
+import lucuma.itc.search._
 import scala.concurrent.duration.FiniteDuration
 
 trait Itc[F[_]] {

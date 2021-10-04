@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.api.model.enum
+package lucuma.core.enum
 
 import cats.implicits._
 
@@ -9,7 +9,8 @@ sealed abstract class StellarLibrarySpectrum(
   val tag:         String,
   val sedSpectrum: String,
   val ocs2Tag:     String
-) extends Product with Serializable
+) extends Product
+    with Serializable
 
 object StellarLibrarySpectrum {
 
@@ -65,16 +66,62 @@ object StellarLibrarySpectrum {
   case object M9III   extends StellarLibrarySpectrum("M9III", "M9III", "M9III")
 
   val all = List(
-    O5V, O8III, B0V, B5_7V, B5III, B5I, A0V, A0III, A0I, A5V, A5III, F0V, F0III, F0I, F5V, F5V_w,
-    F6V_r, F5III, F5I, G0V, G0V_w, G0V_r, G0III, G0I, G2V, G5V, G5V_w, G5V_r, G5III, G5III_w,
-    G5III_r, G5I, K0V, K0V_r, K0III, K0III_w, K0III_r, K0_1II, K4V, K4III, K4III_w, K4III_r,
-    K4I, M0V, M0III, M3V, M3III, M6V, M6III, M9III
+    O5V,
+    O8III,
+    B0V,
+    B5_7V,
+    B5III,
+    B5I,
+    A0V,
+    A0III,
+    A0I,
+    A5V,
+    A5III,
+    F0V,
+    F0III,
+    F0I,
+    F5V,
+    F5V_w,
+    F6V_r,
+    F5III,
+    F5I,
+    G0V,
+    G0V_w,
+    G0V_r,
+    G0III,
+    G0I,
+    G2V,
+    G5V,
+    G5V_w,
+    G5V_r,
+    G5III,
+    G5III_w,
+    G5III_r,
+    G5I,
+    K0V,
+    K0V_r,
+    K0III,
+    K0III_w,
+    K0III_r,
+    K0_1II,
+    K4V,
+    K4III,
+    K4III_w,
+    K4III_r,
+    K4I,
+    M0V,
+    M0III,
+    M3V,
+    M3III,
+    M6V,
+    M6III,
+    M9III
   )
 
   def fromTag(tag: String): Option[StellarLibrarySpectrum] =
     all.find(_.tag === tag)
 
   def fromTagIgnoreCase(tag: String): Option[StellarLibrarySpectrum] =
-    all.find(_.tag equalsIgnoreCase tag)
+    all.find(_.tag.equalsIgnoreCase(tag))
 
 }

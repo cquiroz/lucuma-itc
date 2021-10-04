@@ -1,13 +1,13 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.odb.search
+package lucuma.itc.search
 
 import cats._
 import cats.syntax.all._
 import lucuma.core.enum._
-import lucuma.odb.itc.Itc
-import lucuma.odb.search.gmosnorth.GmosNorthFilterSelector
+import lucuma.itc.Itc
+import lucuma.itc.search.gmosnorth.GmosNorthFilterSelector
 import eu.timepit.refined.types.numeric.PosInt
 
 sealed trait Result {
@@ -58,19 +58,12 @@ object Search {
         .filter(_.resolution     >= constraints.resolution.value)
 
     // Done!
-      // println("----")
-      // println(allModes)
-      // println(compatibleModes)
-      // println("--")
     val resp = compatibleModes.parTraverse { mode =>
-      println(mode)
       Itc[F].calculate(targetProfile, mode, signalToNoise.value).map(Result.Spectroscopy(mode, _))
-    }.map(x => {println(s"after $x");x})
-    .map(_.sortBy {
+    }.map(_.sortBy {
       case Result.Spectroscopy(_, Itc.Result.Success(t, n, _)) => t.toSeconds.toDouble * n
       case Result.Spectroscopy(_, Itc.Result.SourceTooBright(_))  => Double.MaxValue
     }).map(SpectroscopyResults(_))
-    println(resp)
     resp
 
   }

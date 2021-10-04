@@ -7,11 +7,11 @@ import cats.effect._
 import cats.implicits._
 import lucuma.core.math.Angle
 import lucuma.core.enum._
-import lucuma.odb.itc.Itc
-import lucuma.odb.search.TargetProfile
-import lucuma.odb.search.ObservingMode
-import lucuma.odb.api.model.syntax.instrument._
-import lucuma.odb.api.model.syntax.finiteduration._
+import lucuma.itc.Itc
+import lucuma.itc.search.TargetProfile
+import lucuma.itc.search.ObservingMode
+import lucuma.itc.syntax.instrument._
+import lucuma.itc.syntax.finiteduration._
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.syntax.all._
