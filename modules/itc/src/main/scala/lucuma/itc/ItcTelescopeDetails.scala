@@ -3,7 +3,8 @@
 
 package lucuma.itc
 
-import io.circe.{ Encoder, Json }
+import io.circe.Encoder
+import io.circe.Json
 
 final case class ItcTelescopeDetails(wfs: ItcWavefrontSensor)
 

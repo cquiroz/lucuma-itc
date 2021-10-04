@@ -3,8 +3,8 @@
 
 package lucuma.itc
 
-import lucuma.core.enum._
 import io.circe.Encoder
+import lucuma.core.enum._
 
 final case class ItcObservingConditions(
   iq:      ImageQuality,

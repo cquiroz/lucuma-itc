@@ -3,11 +3,11 @@
 
 package lucuma.itc.search.syntax
 
-import lucuma.itc.search.Coverage
 import cats.implicits._
 import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthFilter._
 import lucuma.core.math.Wavelength
+import lucuma.itc.search.Coverage
 
 final class GmosNorthFilterOps(val self: GmosNorthFilter) extends AnyVal {
 

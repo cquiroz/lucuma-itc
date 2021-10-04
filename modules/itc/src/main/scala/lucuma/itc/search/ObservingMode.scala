@@ -6,8 +6,8 @@ package lucuma.itc.search
 import lucuma.core.enum._
 import lucuma.core.math.Wavelength
 import lucuma.itc.search.syntax.gmosnorthdisperser._
-import lucuma.itc.search.syntax.gmosnorthfpu._
 import lucuma.itc.search.syntax.gmosnorthfilter._
+import lucuma.itc.search.syntax.gmosnorthfpu._
 import spire.math.Rational
 
 sealed trait ObservingMode {

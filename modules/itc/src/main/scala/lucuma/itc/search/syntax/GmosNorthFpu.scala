@@ -5,7 +5,6 @@ package lucuma.itc.search.syntax
 
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.GmosNorthFpu._
-
 import lucuma.core.math.Angle
 
 /**

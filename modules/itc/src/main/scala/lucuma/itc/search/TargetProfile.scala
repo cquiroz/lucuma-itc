@@ -5,8 +5,8 @@ package lucuma.itc.search
 
 import lucuma.core.math.Redshift
 import lucuma.core.model.Magnitude
-import lucuma.core.model.SpectralDistribution
 import lucuma.core.model.SpatialProfile
+import lucuma.core.model.SpectralDistribution
 
 /** Target properties we need to know at phase zero. */
 final case class TargetProfile(

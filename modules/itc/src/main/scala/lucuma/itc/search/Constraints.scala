@@ -3,8 +3,8 @@
 
 package lucuma.itc.search
 
-import lucuma.core.math.Wavelength
 import eu.timepit.refined.types.numeric.PosInt
+import lucuma.core.math.Wavelength
 
 /** Observing constraints, used to narrow the space of compatible observing modes. */
 sealed trait Constraints

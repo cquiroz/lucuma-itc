@@ -3,13 +3,19 @@
 
 package lucuma.itc.service
 
-import lucuma.sso.client.SsoClient.UserInfo
-import lucuma.sso.client.{ SsoClient, SsoJwtReader }
-import lucuma.sso.client.util.{ GpgPublicKeyReader, JwtDecoder }
-
-import cats.effect.{ Async, Resource, Sync }
+import cats.effect.Async
+import cats.effect.Resource
+import cats.effect.Sync
 import cats.syntax.all._
-import ciris.{ ConfigDecoder, ConfigValue, env, prop }
+import ciris.ConfigDecoder
+import ciris.ConfigValue
+import ciris.env
+import ciris.prop
+import lucuma.sso.client.SsoClient
+import lucuma.sso.client.SsoClient.UserInfo
+import lucuma.sso.client.SsoJwtReader
+import lucuma.sso.client.util.GpgPublicKeyReader
+import lucuma.sso.client.util.JwtDecoder
 import org.http4s.Uri
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.http4s.client.Client

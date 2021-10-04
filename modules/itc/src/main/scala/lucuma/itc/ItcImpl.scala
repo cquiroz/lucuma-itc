@@ -5,22 +5,23 @@ package lucuma.itc
 
 import cats.effect._
 import cats.implicits._
-import lucuma.core.math.Angle
-import lucuma.core.enum._
-import lucuma.itc.Itc
-import lucuma.itc.search.TargetProfile
-import lucuma.itc.search.ObservingMode
-import lucuma.itc.syntax.instrument._
-import lucuma.itc.syntax.finiteduration._
 import io.circe.syntax._
+import lucuma.core.enum._
+import lucuma.core.math.Angle
+import lucuma.itc.Itc
+import lucuma.itc.search.ObservingMode
+import lucuma.itc.search.TargetProfile
+import lucuma.itc.syntax.finiteduration._
+import lucuma.itc.syntax.instrument._
 import org.http4s._
-import org.http4s.syntax.all._
+import org.http4s.asynchttpclient.client.AsyncHttpClient
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.asynchttpclient.client.AsyncHttpClient
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.client.middleware._
 import org.http4s.dsl.io._
+import org.http4s.syntax.all._
+
 import scala.concurrent.duration._
 
 /** An ITC implementation that calls the OCS2 ITC server remotely. */

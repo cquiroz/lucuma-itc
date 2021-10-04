@@ -5,10 +5,10 @@ package lucuma.itc.search
 
 import cats._
 import cats.syntax.all._
+import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.enum._
 import lucuma.itc.Itc
 import lucuma.itc.search.gmosnorth.GmosNorthFilterSelector
-import eu.timepit.refined.types.numeric.PosInt
 
 sealed trait Result {
   def mode: ObservingMode

@@ -3,9 +3,10 @@
 
 package lucuma.itc
 
+import io.circe.Encoder
+import io.circe.Json
 import lucuma.core.math.Wavelength
 import lucuma.itc.search.ObservingMode
-import io.circe.{ Encoder, Json }
 
 final case class ItcInstrumentDetails(mode: ObservingMode)
 

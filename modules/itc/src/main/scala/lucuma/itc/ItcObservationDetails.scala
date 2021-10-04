@@ -3,11 +3,12 @@
 
 package lucuma.itc
 
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
 import lucuma.core.math.Angle
 import lucuma.itc.syntax.finiteduration._
-import io.circe._
-import io.circe.syntax._
-import io.circe.generic.semiauto._
+
 import scala.concurrent.duration.FiniteDuration
 
 final case class ItcObservationDetails(

@@ -4,44 +4,45 @@
 package lucuma.itc.service
 
 import cats._
-import cats.syntax.all._
 import cats.data._
-
-import edu.gemini.grackle._
-import edu.gemini.grackle.circe.CirceMapping
-
-import Query._, Value._
-import QueryCompiler._
-import io.circe.Json
-import io.circe.Encoder
-import scala.util.Using
-import scala.io.Source
-import cats.effect.{ Unique => _, _ }
-import lucuma.itc.search.SpectroscopyResults
-import lucuma.itc.search.Result.Spectroscopy
-import lucuma.itc.search.ObservingMode
-import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
-import lucuma.itc.Itc
-import lucuma.core.math.Wavelength
-import scala.concurrent.duration._
-import lucuma.core.enum.GmosNorthDisperser
-import lucuma.core.enum.GmosNorthFpu
-import java.math.RoundingMode
-import lucuma.core.math.Redshift
-import eu.timepit.refined._
-import eu.timepit.refined.numeric.Positive
-import lucuma.core.math.Angle
-import lucuma.core.model.SpatialProfile
-import lucuma.core.model.SpectralDistribution
+import cats.effect.{Unique => _, _}
+import cats.syntax.all._
 import coulomb.refined._
 import coulomb.si.Kelvin
-import lucuma.core.enum.StellarLibrarySpectrum
-import lucuma.core.enum.NonStellarLibrarySpectrum
+import edu.gemini.grackle._
+import edu.gemini.grackle.circe.CirceMapping
+import eu.timepit.refined._
+import eu.timepit.refined.numeric.Positive
+import io.circe.Encoder
+import io.circe.Json
+import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.MagnitudeBand
-import lucuma.core.model.Magnitude
-import lucuma.core.math.MagnitudeValue
 import lucuma.core.enum.MagnitudeSystem
+import lucuma.core.enum.NonStellarLibrarySpectrum
+import lucuma.core.enum.StellarLibrarySpectrum
+import lucuma.core.math.Angle
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Redshift
+import lucuma.core.math.Wavelength
+import lucuma.core.model.Magnitude
+import lucuma.core.model.SpatialProfile
+import lucuma.core.model.SpectralDistribution
+import lucuma.itc.Itc
+import lucuma.itc.search.ObservingMode
+import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
+import lucuma.itc.search.Result.Spectroscopy
+import lucuma.itc.search.SpectroscopyResults
 import lucuma.itc.service.syntax.all._
+
+import java.math.RoundingMode
+import scala.concurrent.duration._
+import scala.io.Source
+import scala.util.Using
+
+import Query._
+import Value._
+import QueryCompiler._
 
 trait Encoders {
   import io.circe.generic.semiauto._

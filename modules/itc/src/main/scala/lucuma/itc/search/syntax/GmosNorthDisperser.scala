@@ -4,10 +4,11 @@
 package lucuma.itc.search.syntax
 
 import eu.timepit.refined.auto._
-import lucuma.itc.search.Coverage
 import lucuma.core.enum.GmosNorthDisperser
 import lucuma.core.enum.GmosNorthDisperser._
-import lucuma.core.math.{ Angle, Wavelength }
+import lucuma.core.math.Angle
+import lucuma.core.math.Wavelength
+import lucuma.itc.search.Coverage
 import spire.math.Rational
 
 /**

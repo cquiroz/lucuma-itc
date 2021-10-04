@@ -4,6 +4,7 @@
 package lucuma.itc.syntax
 
 import lucuma.core.enum.Instrument
+
 import scala.concurrent.duration._
 
 final class InstrumentOps(val self: Instrument) extends AnyVal {

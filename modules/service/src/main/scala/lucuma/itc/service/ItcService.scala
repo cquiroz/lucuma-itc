@@ -3,15 +3,18 @@
 
 package lucuma.itc.service
 
-import cats.implicits._
 import cats.effect.Concurrent
-import io.circe._
-import org.http4s.{ HttpRoutes, InvalidMessageBodyFailure, ParseFailure, QueryParamDecoder }
-import org.http4s.circe._
-import edu.gemini.grackle.Mapping
-import org.http4s.dsl.Http4sDsl
 import cats.effect.kernel.Async
+import cats.implicits._
+import edu.gemini.grackle.Mapping
+import io.circe._
 import lucuma.itc.Itc
+import org.http4s.HttpRoutes
+import org.http4s.InvalidMessageBodyFailure
+import org.http4s.ParseFailure
+import org.http4s.QueryParamDecoder
+import org.http4s.circe._
+import org.http4s.dsl.Http4sDsl
 
 trait ItcService[F[_]] {
   def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json]

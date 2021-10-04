@@ -3,17 +3,18 @@
 
 package lucuma.itc
 
-import lucuma.core.enum._
-import lucuma.core.math.Redshift
-import lucuma.core.math.MagnitudeValue
-import lucuma.core.enum.SurfaceBrightness
-import lucuma.itc.search.TargetProfile
-import io.circe.{ Encoder, Json }
-import io.circe.syntax._
+import io.circe.Encoder
+import io.circe.Json
 import io.circe.generic.semiauto._
+import io.circe.syntax._
+import lucuma.core.enum.SurfaceBrightness
+import lucuma.core.enum._
 import lucuma.core.math.Angle
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.math.Redshift
 import lucuma.core.model.SpatialProfile
 import lucuma.core.model.SpectralDistribution
+import lucuma.itc.search.TargetProfile
 
 final case class ItcSourceDefinition(
   profile:      SpatialProfile,

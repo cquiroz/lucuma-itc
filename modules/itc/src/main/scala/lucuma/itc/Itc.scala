@@ -4,6 +4,7 @@
 package lucuma.itc
 
 import lucuma.itc.search._
+
 import scala.concurrent.duration.FiniteDuration
 
 trait Itc[F[_]] {

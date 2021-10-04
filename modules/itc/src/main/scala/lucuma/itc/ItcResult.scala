@@ -6,7 +6,9 @@ package lucuma.itc
 import cats.Semigroup
 import cats.data.NonEmptyList
 import cats.implicits._
-import io.circe.{ ACursor, Decoder, HCursor }
+import io.circe.ACursor
+import io.circe.Decoder
+import io.circe.HCursor
 
 final case class ItcResult(ccds: NonEmptyList[ItcCcd]) {
 

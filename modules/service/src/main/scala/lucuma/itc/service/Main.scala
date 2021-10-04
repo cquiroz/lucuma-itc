@@ -3,21 +3,21 @@
 
 package lucuma.itc.service
 
-import lucuma.itc.ItcImpl
-
-import cats.effect.{ Async, ExitCode, IO, IOApp }
+import cats.effect.Async
+import cats.effect.ExitCode
+import cats.effect.IO
+import cats.effect.IOApp
 import cats.implicits._
+import edu.gemini.grackle.Mapping
 import fs2.Stream
+import lucuma.itc.Itc
+import lucuma.itc.ItcImpl
 import org.http4s.HttpApp
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.http4s.server.staticcontent._
-// import org.typelevel.log4cats.{Logger => Log4CatsLogger}
-// import org.typelevel.log4cats.slf4j.Slf4jLogger
-import edu.gemini.grackle.Mapping
 
 import scala.concurrent.ExecutionContext.global
-import lucuma.itc.Itc
 
 // #server
 object Main extends IOApp {

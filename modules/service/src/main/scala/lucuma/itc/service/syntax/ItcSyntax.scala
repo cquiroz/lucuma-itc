@@ -4,10 +4,10 @@
 package lucuma.itc.service.syntax
 
 import cats.data._
-import monocle.std.these._
-import monocle.Focus
-import edu.gemini.grackle.Query.Environment
 import edu.gemini.grackle.Problem
+import edu.gemini.grackle.Query.Environment
+import monocle.Focus
+import monocle.std.these._
 
 trait ItcSyntax {
 

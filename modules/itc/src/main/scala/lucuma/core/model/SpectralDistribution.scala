@@ -3,10 +3,11 @@
 
 package lucuma.core.model
 
-import lucuma.core.enum.{ NonStellarLibrarySpectrum, StellarLibrarySpectrum }
 import coulomb.Quantity
 import coulomb.si.Kelvin
 import eu.timepit.refined.types.numeric.PosBigDecimal
+import lucuma.core.enum.NonStellarLibrarySpectrum
+import lucuma.core.enum.StellarLibrarySpectrum
 
 sealed trait SpectralDistribution extends Serializable
 
