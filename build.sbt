@@ -93,7 +93,6 @@ lazy val service = project
       "ch.qos.logback" % "logback-classic"     % logbackVersion,
       "org.http4s"    %% "http4s-core"         % http4sVersion,
       "org.http4s"    %% "http4s-blaze-server" % http4sVersion,
-      "org.http4s"    %% "http4s-blaze-client" % http4sVersion,
       "org.typelevel" %% "munit-cats-effect-3" % munitCatsEffectVersion % Test
     )
   )
