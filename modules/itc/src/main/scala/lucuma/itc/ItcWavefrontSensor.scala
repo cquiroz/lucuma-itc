@@ -8,7 +8,8 @@ import io.circe.Encoder
 // N.B. this isn't in the enum package because it's not clear that it will exist in the schema
 sealed abstract class ItcWavefrontSensor(
   val ocs2Tag: String
-) extends Product with Serializable
+) extends Product
+    with Serializable
 
 object ItcWavefrontSensor {
 

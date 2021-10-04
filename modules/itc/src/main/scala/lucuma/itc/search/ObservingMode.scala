@@ -17,9 +17,9 @@ sealed trait ObservingMode {
 object ObservingMode {
 
   sealed trait Spectroscopy extends ObservingMode {
-    def λ:          Wavelength
+    def λ: Wavelength
     def resolution: Rational
-    def coverage:   Coverage
+    def coverage: Coverage
   }
 
   object Spectroscopy {

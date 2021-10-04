@@ -57,7 +57,7 @@ trait Encoders {
     deriveEncoder[Itc.Result.Success]
 
   implicit val encoderItcResult: Encoder[Itc.Result] = Encoder.instance {
-    case f: Itc.Result.Success =>
+    case f: Itc.Result.Success         =>
       Json.obj(("resultType", Json.fromString("Success"))).deepMerge(f.asJson)
     case Itc.Result.SourceTooBright(m) =>
       Json.obj(("resultType", Json.fromString("Error")),
@@ -82,7 +82,7 @@ trait Encoders {
     )
   }
 
-  implicit val encoderGmosNorth: Encoder[GmosNorth] = new Encoder[GmosNorth] {
+  implicit val encoderGmosNorth: Encoder[GmosNorth]                      = new Encoder[GmosNorth] {
     final def apply(a: GmosNorth): Json = Json.obj(
       ("instrument", Json.fromString(a.instrument.toString)),
       ("resolution", Json.fromInt(a.resolution.toInt)),
@@ -167,36 +167,36 @@ object ItcMapping extends Encoders {
 
   def parseFwhw(units: List[(String, Value)]): Option[Angle] =
     units.find(_._2 != Value.AbsentValue) match {
-      case Some(("microarcseconds", IntValue(n))) =>
+      case Some(("microarcseconds", IntValue(n)))   =>
         Angle.microarcseconds.reverseGet(n.toLong).some
-      case Some(("milliarcseconds", IntValue(n))) =>
+      case Some(("milliarcseconds", IntValue(n)))   =>
         Angle.milliarcseconds.reverseGet(n).some
       case Some(("milliarcseconds", FloatValue(n))) =>
         Angle.milliarcseconds.reverseGet(n.toInt).some
-      case Some(("arcseconds", IntValue(n))) =>
+      case Some(("arcseconds", IntValue(n)))        =>
         Angle.arcseconds.reverseGet(n).some
-      case Some(("arcseconds", FloatValue(n))) =>
+      case Some(("arcseconds", FloatValue(n)))      =>
         Angle.arcseconds.reverseGet(n.toInt).some
-      case _ => None
+      case _                                        => None
     }
 
   def parseWavelength(units: List[(String, Value)]): Option[Wavelength] =
     units.find(_._2 != Value.AbsentValue) match {
-      case Some(("picometers", IntValue(n))) =>
+      case Some(("picometers", IntValue(n)))    =>
         Wavelength.fromPicometers.getOption(n)
-      case Some(("angstroms", IntValue(n))) =>
+      case Some(("angstroms", IntValue(n)))     =>
         Wavelength.decimalAngstroms.getOption(BigDecimal(n))
-      case Some(("angstroms", FloatValue(n))) =>
+      case Some(("angstroms", FloatValue(n)))   =>
         Wavelength.decimalAngstroms.getOption(BigDecimal(n))
-      case Some(("nanometers", IntValue(n))) =>
+      case Some(("nanometers", IntValue(n)))    =>
         Wavelength.decimalNanometers.getOption(BigDecimal(n))
-      case Some(("nanometers", FloatValue(n))) =>
+      case Some(("nanometers", FloatValue(n)))  =>
         Wavelength.decimalNanometers.getOption(BigDecimal(n))
-      case Some(("micrometers", IntValue(n))) =>
+      case Some(("micrometers", IntValue(n)))   =>
         Wavelength.decimalMicrometers.getOption(BigDecimal(n))
       case Some(("micrometers", FloatValue(n))) =>
         Wavelength.decimalMicrometers.getOption(BigDecimal(n))
-      case _ => None
+      case _                                    => None
     }
 
   def apply[F[_]: Sync]: F[Mapping[F]] =
@@ -255,14 +255,14 @@ object ItcMapping extends Encoders {
                   case (i, ("resolution", IntValue(r))) if r > 0 =>
                     refineV[Positive](r)
                       .fold(i.addProblem, v => cursorEnvAdd("resolution", v)(i))
-                  case (i, ("resolution", v)) =>
+                  case (i, ("resolution", v))                    =>
                     i.addProblem(s"Not valid resolution value $v")
 
                   // signalToNoise
                   case (i, ("signalToNoise", IntValue(r))) if r > 0 =>
                     refineV[Positive](r)
                       .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
-                  case (i, ("signalToNoise", v)) =>
+                  case (i, ("signalToNoise", v))                    =>
                     i.addProblem(s"Not valid signalToNoise value $v")
 
                   // spatialProfile
@@ -317,7 +317,7 @@ object ItcMapping extends Encoders {
                           if pl > 0 =>
                         val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
                         cursorEnvAdd("spectralDistribution", powerLaw)(i)
-                      case ("stellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil =>
+                      case ("stellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil    =>
                         StellarLibrarySpectrum
                           .fromTag(s.fromScreamingSnakeCase)
                           .orElse(StellarLibrarySpectrum.fromTag(s))
@@ -329,7 +329,7 @@ object ItcMapping extends Encoders {
                           .orElse(NonStellarLibrarySpectrum.fromTag(s))
                           .map(s => cursorEnvAdd("spectralDistribution", s)(i))
                           .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
-                      case _ =>
+                      case _                                                            =>
                         i.addProblem("Cannot parse spatialDistribution")
                     }
                   case (i, ("spectralDistribution", ObjectValue(sd))) =>
@@ -364,11 +364,11 @@ object ItcMapping extends Encoders {
                         MagnitudeSystem
                           .fromTag(s.fromScreamingSnakeCase)
                           .orElse(MagnitudeSystem.fromTag(s))
-                      case UntypedEnumValue(s) =>
+                      case UntypedEnumValue(s)                   =>
                         MagnitudeSystem
                           .fromTag(s.fromScreamingSnakeCase)
                           .orElse(MagnitudeSystem.fromTag(s))
-                      case _ => none
+                      case _                                     => none
                     }
                     (v, b, s)
                       .mapN(Magnitude(_, _, e, _))
@@ -379,12 +379,12 @@ object ItcMapping extends Encoders {
                   case (i, ("redshift", FloatValue(r))) =>
                     val rs = Redshift(r)
                     i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-                  case (i, ("redshift", IntValue(r))) =>
+                  case (i, ("redshift", IntValue(r)))   =>
                     val rs = Redshift(r)
                     i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-                  case (i, ("redshift", v)) =>
+                  case (i, ("redshift", v))             =>
                     i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
-                  case (e, _) => e
+                  case (e, _)                           => e
                 }.map(e => e.copy(child = Select("spectroscopy", Nil, child)))
             })
           )

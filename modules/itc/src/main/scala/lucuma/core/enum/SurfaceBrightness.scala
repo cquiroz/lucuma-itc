@@ -4,9 +4,10 @@
 package lucuma.core.enum
 
 sealed abstract class SurfaceBrightness(
-  val tag:       String,
-  val ocs2Tag:   String
-) extends Product with Serializable
+  val tag:     String,
+  val ocs2Tag: String
+) extends Product
+    with Serializable
 
 object SurfaceBrightness {
 
@@ -18,4 +19,3 @@ object SurfaceBrightness {
   case object ErgsFrequency  extends SurfaceBrightness("ErgsFrequency", "erg/s/cm²/Hz/arcsec²")
 
 }
-

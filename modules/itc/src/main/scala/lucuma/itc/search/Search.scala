@@ -12,7 +12,7 @@ import eu.timepit.refined.types.numeric.PosInt
 
 sealed trait Result {
   def mode: ObservingMode
-  def itc:  Itc.Result
+  def itc: Itc.Result
 }
 
 object Result {
@@ -55,15 +55,18 @@ object Search {
     val compatibleModes: List[ObservingMode.Spectroscopy] =
       allModes
         .filter(_.coverage.width >= constraints.simultaneousCoverage)
-        .filter(_.resolution     >= constraints.resolution.value)
+        .filter(_.resolution >= constraints.resolution.value)
 
     // Done!
-    val resp = compatibleModes.parTraverse { mode =>
-      Itc[F].calculate(targetProfile, mode, signalToNoise.value).map(Result.Spectroscopy(mode, _))
-    }.map(_.sortBy {
-      case Result.Spectroscopy(_, Itc.Result.Success(t, n, _)) => t.toSeconds.toDouble * n
-      case Result.Spectroscopy(_, Itc.Result.SourceTooBright(_))  => Double.MaxValue
-    }).map(SpectroscopyResults(_))
+    val resp = compatibleModes
+      .parTraverse { mode =>
+        Itc[F].calculate(targetProfile, mode, signalToNoise.value).map(Result.Spectroscopy(mode, _))
+      }
+      .map(_.sortBy {
+        case Result.Spectroscopy(_, Itc.Result.Success(t, n, _))   => t.toSeconds.toDouble * n
+        case Result.Spectroscopy(_, Itc.Result.SourceTooBright(_)) => Double.MaxValue
+      })
+      .map(SpectroscopyResults(_))
     resp
 
   }

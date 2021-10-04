@@ -12,7 +12,6 @@ import cats.syntax.all._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.extras.LogLevel
 
-
 package object service {
 
   def log[F[_]: Logger](level: LogLevel, u: Option[User], s: => String): F[Unit] =

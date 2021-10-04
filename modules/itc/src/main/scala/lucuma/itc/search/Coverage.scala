@@ -14,9 +14,9 @@ sealed trait Coverage {
   /** Intersect this `Coverage` with another. */
   def ⋂(other: Coverage): Coverage =
     (this, other) match {
-      case (Empty, _) => Empty
-      case (_, Empty) => Empty
-      case (Range(a, b), Range(aʹ, bʹ)) => Coverage(a max aʹ, b min bʹ)
+      case (Empty, _)                   => Empty
+      case (_, Empty)                   => Empty
+      case (Range(a, b), Range(aʹ, bʹ)) => Coverage(a.max(aʹ), b.min(bʹ))
     }
 
   /** Coverage width; i.e., difference between max and min (or zero). */
@@ -29,7 +29,7 @@ sealed trait Coverage {
   /** Range projection; defined when non-empty. */
   def range: Option[Coverage.Range] =
     this match {
-      case Empty              => None
+      case Empty           => None
       case r @ Range(_, _) => Some(r)
     }
 
@@ -47,11 +47,13 @@ object Coverage {
 
   /** Construct a `Coverage`, empty if `min >= max`. */
   def apply(min: Wavelength, max: Wavelength): Coverage =
-    if (min < max) new Range(min, max) {} else Empty
+    if (min < max) new Range(min, max) {}
+    else Empty
 
   /** Construct a `Coverage` centered at the given wavelength, with the specified width. */
   def centered(central: Wavelength, width: Wavelength): Coverage = {
-    val half = Wavelength.fromPicometers.getOption(width.toPicometers.value.value / 2).get // always positive
+    val half =
+      Wavelength.fromPicometers.getOption(width.toPicometers.value.value / 2).get // always positive
     apply(central - half, central + half)
   }
 

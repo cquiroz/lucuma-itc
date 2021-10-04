@@ -13,7 +13,7 @@ final class InstrumentOps(val self: Instrument) extends AnyVal {
     self match {
       case Instrument.GmosNorth => 1.second
       case Instrument.GmosSouth => 1.second
-      case i                => sys.error(s"Minimum exposure time for $i is not know.")
+      case i                    => sys.error(s"Minimum exposure time for $i is not know.")
     }
 
   /** Minimum exposure time allowed by the instrument. Always greater than `minExposureDuration`. */
@@ -21,7 +21,7 @@ final class InstrumentOps(val self: Instrument) extends AnyVal {
     self match {
       case Instrument.GmosNorth => 20.minutes
       case Instrument.GmosSouth => 20.minutes
-      case i                => sys.error(s"Maximum exposure time for $i is not know.")
+      case i                    => sys.error(s"Maximum exposure time for $i is not know.")
     }
 
   /** True if the instrument requires exposure times in integral seconds. */
@@ -29,7 +29,7 @@ final class InstrumentOps(val self: Instrument) extends AnyVal {
     self match {
       case Instrument.GmosNorth => true
       case Instrument.GmosSouth => true
-      case i                => sys.error(s"Integral durations for $i is not know.")
+      case i                    => sys.error(s"Integral durations for $i is not know.")
     }
 
 }

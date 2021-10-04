@@ -13,7 +13,7 @@ import io.circe.literal._
 class GraphQLSuite extends munit.CatsEffectSuite {
   val service: IO[HttpRoutes[IO]] =
     ItcMapping[IO].map(m => ItcService.routes[IO](ItcService.service[IO](m, null)))
-  val itcFixture = ResourceSuiteLocalFixture(
+  val itcFixture                  = ResourceSuiteLocalFixture(
     "itc",
     Resource.make(service)(_ => IO.unit)
   )

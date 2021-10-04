@@ -11,7 +11,8 @@ final class WavelengthOps(val self: Wavelength) extends AnyVal {
 
   /** Returns the difference of this wavelength and `other`, clipped at Wavelength.Min. */
   def -(other: Wavelength): Wavelength =
-    Wavelength.fromPicometers.getOption(self.toPicometers.value.value - other.toPicometers.value.value)
+    Wavelength.fromPicometers
+      .getOption(self.toPicometers.value.value - other.toPicometers.value.value)
       .getOrElse(Wavelength.Min)
 
   /** Returns the sum of this wavelength and `other`, clipped at Wavelength.Max. */

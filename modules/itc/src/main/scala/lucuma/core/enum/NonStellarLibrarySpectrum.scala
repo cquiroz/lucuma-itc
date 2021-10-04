@@ -27,8 +27,8 @@ object NonStellarLibrarySpectrum {
                                         "spiral-galaxy",
                                         "SpiralGalaxy"
       )
-  case object QS0  extends NonStellarLibrarySpectrum("QS0", "QSO (80-855nm)", "QSO", "QS0")
-  case object QS02 extends NonStellarLibrarySpectrum("QS02", "QSO (276-3520nm)", "QSO2", "QS02")
+  case object QS0     extends NonStellarLibrarySpectrum("QS0", "QSO (80-855nm)", "QSO", "QS0")
+  case object QS02    extends NonStellarLibrarySpectrum("QS02", "QSO (276-3520nm)", "QSO2", "QS02")
   case object OrionNebula
       extends NonStellarLibrarySpectrum("OrionNebula",
                                         "HII region (Orion)",

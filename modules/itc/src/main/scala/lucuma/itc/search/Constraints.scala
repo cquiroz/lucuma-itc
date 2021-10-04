@@ -15,7 +15,7 @@ object Constraints {
   final case class Spectroscopy(
     λ:                    Wavelength,
     simultaneousCoverage: Wavelength,
-    resolution:           PosInt, // todo: Resolution
+    resolution:           PosInt // todo: Resolution
   ) extends Constraints
 
 }

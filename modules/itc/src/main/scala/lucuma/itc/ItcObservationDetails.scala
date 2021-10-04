@@ -17,8 +17,7 @@ final case class ItcObservationDetails(
 
 object ItcObservationDetails {
 
-  sealed trait CalculationMethod
-    extends Product with Serializable
+  sealed trait CalculationMethod extends Product with Serializable
 
   object CalculationMethod {
 
@@ -41,7 +40,7 @@ object ItcObservationDetails {
               "coadds"         -> a.coadds.asJson,
               "exposureTime"   -> a.exposureDuration.toDoubleSeconds.asJson,
               "sourceFraction" -> a.sourceFraction.asJson,
-              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson,
+              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson
             )
           }
       }
@@ -62,7 +61,7 @@ object ItcObservationDetails {
               "coadds"         -> a.coadds.asJson,
               "exposureTime"   -> a.exposureDuration.toDoubleSeconds.asJson,
               "sourceFraction" -> a.sourceFraction.asJson,
-              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson,
+              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson
             )
           }
       }
@@ -97,7 +96,7 @@ object ItcObservationDetails {
               "exposureTime"   -> a.exposureDuration.toDoubleSeconds.asJson,
               "coadds"         -> a.coadds.asJson,
               "sourceFraction" -> a.sourceFraction.asJson,
-              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson,
+              "offset"         -> Angle.signedDecimalArcseconds.get(a.ditherOffset).asJson
             )
           }
       }
@@ -125,8 +124,7 @@ object ItcObservationDetails {
 
   }
 
-  sealed trait AnalysisMethod
-    extends Product with Serializable
+  sealed trait AnalysisMethod extends Product with Serializable
 
   object AnalysisMethod {
 
@@ -142,7 +140,7 @@ object ItcObservationDetails {
       }
 
       final case class User(
-        diameter: Double,
+        diameter:    Double,
         skyAperture: Double
       ) extends Aperture
 
@@ -212,7 +210,7 @@ object ItcObservationDetails {
               case a: Single => Json.obj("IfuSingle" -> Single.encoder(a))
               case a: Radial => Json.obj("IfuRadial" -> Radial.encoder(a))
               case a: Summed => Json.obj("IfuSummed" -> Summed.encoder(a))
-              case a: Sum    => Json.obj("IfuSum"    -> Sum.encoder(a))
+              case a: Sum    => Json.obj("IfuSum" -> Sum.encoder(a))
             }
         }
 
@@ -223,7 +221,7 @@ object ItcObservationDetails {
         def apply(a: AnalysisMethod): Json =
           a match {
             case a: Aperture => Json.obj("ApertureMethod" -> Aperture.encoder(a))
-            case a: Ifu      => Json.obj("IfuMethod"      -> Ifu.encoder(a))
+            case a: Ifu      => Json.obj("IfuMethod" -> Ifu.encoder(a))
           }
       }
 

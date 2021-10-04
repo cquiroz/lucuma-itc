@@ -11,13 +11,15 @@ import lucuma.core.math.{ Angle, Wavelength }
 import spire.math.Rational
 
 /**
- * Syntax extensions for missing properties. These need to be folded back into the lucuma.core enumerations.
+ * Syntax extensions for missing properties. These need to be folded back into the lucuma.core
+ * enumerations.
  */
 final class GmosNorthDisperserOps(val self: GmosNorthDisperser) extends AnyVal {
 
   /**
    * Reference wavelength (nm) and resolution for 0.5" slit.
-   * @see http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
+   * @see
+   *   http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
    */
   private def reference: (Long, Long) =
     self match {
@@ -28,13 +30,14 @@ final class GmosNorthDisperserOps(val self: GmosNorthDisperser) extends AnyVal {
       case R600_G5304  => (926, 3744)
       case B480_G5309  => (422, 1520)
       case R400_G5305  => (764, 1918)
-      case R150_G5306  => (717,  631) // obsolete
-      case R150_G5308  => (717,  631)
+      case R150_G5306  => (717, 631)  // obsolete
+      case R150_G5308  => (717, 631)
     }
 
   /**
    * Δλ for 0.5" slit.
-   * @see http://hyperphysics.phy-astr.gsu.edu/hbase/phyopt/gratres.html
+   * @see
+   *   http://hyperphysics.phy-astr.gsu.edu/hbase/phyopt/gratres.html
    */
   private def Δλ: Rational = {
     val (λ, r) = reference
@@ -43,23 +46,25 @@ final class GmosNorthDisperserOps(val self: GmosNorthDisperser) extends AnyVal {
 
   /** Resolution at λ with the specified slit width (arcsec). */
   def resolution(λ: Wavelength, slitWidth: Angle): Rational =
-    ((λ.nanometer.value / Δλ) * (Rational(1, 2) / Angle.signedDecimalArcseconds.get(slitWidth)))
+    (λ.nanometer.value / Δλ) * (Rational(1, 2) / Angle.signedDecimalArcseconds.get(slitWidth))
 
   /**
    * Simultaneous coverage with Hamamatsu detectors.
-   * @see http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
+   * @see
+   *   http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
    */
   def simultaneousCoverage: Wavelength =
     self match {
-      case B1200_G5301 => Wavelength.fromNanometers( 164).get
-      case R831_G5302  => Wavelength.fromNanometers( 235).get
-      case B600_G5303  => Wavelength.fromNanometers( 276).get // obsolete, value with old e2v detector
-      case B600_G5307  => Wavelength.fromNanometers( 317).get
-      case R600_G5304  => Wavelength.fromNanometers( 328).get
-      case R400_G5305  => Wavelength.fromNanometers( 472).get
+      case B1200_G5301 => Wavelength.fromNanometers(164).get
+      case R831_G5302  => Wavelength.fromNanometers(235).get
+      case B600_G5303  => Wavelength.fromNanometers(276).get // obsolete, value with old e2v detector
+      case B600_G5307  => Wavelength.fromNanometers(317).get
+      case R600_G5304  => Wavelength.fromNanometers(328).get
+      case R400_G5305  => Wavelength.fromNanometers(472).get
       case B480_G5309  => Wavelength(390000)
-      case R150_G5306  => Wavelength.fromNanometers(1071).get // obsolete, value with old e2v detector
-      case R150_G5308  => Wavelength.fromNanometers(1219).get
+      case R150_G5306  =>
+        Wavelength.fromNanometers(1071).get // obsolete, value with old e2v detector
+      case R150_G5308 => Wavelength.fromNanometers(1219).get
     }
 
   /** Compute the coverage of this disperser, given a central wavelength. */
@@ -68,17 +73,18 @@ final class GmosNorthDisperserOps(val self: GmosNorthDisperser) extends AnyVal {
 
   /**
    * Dispersion (pm/pixel) with Hamamatsu detectors.
-   * @see http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
+   * @see
+   *   http://www.gemini.edu/sciops/instruments/gmos/spectroscopy-overview/gratings
    */
   def dispersion: Int =
     self match {
-      case B1200_G5301 =>  26
-      case R831_G5302  =>  38
-      case B600_G5303  =>  45 // obsolete, value with old e2v detector
-      case B600_G5307  =>  50
-      case R600_G5304  =>  52
-      case R400_G5305  =>  74
-      case B480_G5309  =>  62
+      case B1200_G5301 => 26
+      case R831_G5302  => 38
+      case B600_G5303  => 45  // obsolete, value with old e2v detector
+      case B600_G5307  => 50
+      case R600_G5304  => 52
+      case R400_G5305  => 74
+      case B480_G5309  => 62
       case R150_G5306  => 174 // obsolete, value with old e2v detector
       case R150_G5308  => 193
     }

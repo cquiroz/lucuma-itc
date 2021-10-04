@@ -4,7 +4,7 @@
 package lucuma.odb.api.service.syntax
 
 import clue.model.StreamingMessage.FromServer
-import clue.model.StreamingMessage.FromServer.{Data, DataWrapper, Error}
+import clue.model.StreamingMessage.FromServer.{ Data, DataWrapper, Error }
 import io.circe.Json
 
 final class JsonOps(val self: Json) extends AnyVal {
@@ -23,7 +23,9 @@ final class JsonOps(val self: Json) extends AnyVal {
       id,
       Json.arr(
         Json.obj(
-          "message" -> Json.fromString(s"Internal server error, expected error or data but got:\n${self.spaces2}")
+          "message" -> Json.fromString(
+            s"Internal server error, expected error or data but got:\n${self.spaces2}"
+          )
         )
       )
     )

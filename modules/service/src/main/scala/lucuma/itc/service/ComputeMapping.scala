@@ -17,24 +17,30 @@ trait ComputeMapping[F[_]] { this: CirceMapping[F] =>
   /** A RootMapping that computes a result directly. */
   sealed abstract case class ComputeRoot[A] private (
     fieldName: String,
-    tpe: Type,
-    pos: SourcePos,
-    run: Cursor.Env => F[Result[Json]],
+    tpe:       Type,
+    pos:       SourcePos,
+    run:       Cursor.Env => F[Result[Json]]
   ) extends RootMapping {
-    def cursor(query: Query, env: Cursor.Env, resultName: Option[String]): fs2.Stream[F,Result[(Query, Cursor)]] =
-        fs2.Stream.eval(run(env)).map { r => r.map(a => (query, CirceCursor(Cursor.Context(fieldName, resultName, tpe), a, None, env))) }
-    def mutation: Mutation = Mutation.None
+    def cursor(
+      query:      Query,
+      env:        Cursor.Env,
+      resultName: Option[String]
+    ): fs2.Stream[F, Result[(Query, Cursor)]] =
+      fs2.Stream.eval(run(env)).map { r =>
+        r.map(a => (query, CirceCursor(Cursor.Context(fieldName, resultName, tpe), a, None, env)))
+      }
+    def mutation: Mutation                 = Mutation.None
     def withParent(tpe: Type): RootMapping = this
   }
 
   object ComputeRoot {
+
     /** Construct a `ComputeRoot` for the specified field and type. */
-    def apply[A](fieldName: String, tpe: Type, run: Cursor.Env => F[Result[A]])(
-      implicit pos: SourcePos,
-               enc: Encoder[A]
+    def apply[A](fieldName: String, tpe: Type, run: Cursor.Env => F[Result[A]])(implicit
+      pos:                  SourcePos,
+      enc:                  Encoder[A]
     ): ComputeRoot[A] =
       new ComputeRoot[A](fieldName, tpe, pos, e => run(e).map(_.map(enc(_)))) {}
   }
 
 }
-

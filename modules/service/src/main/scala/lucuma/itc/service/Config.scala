@@ -4,12 +4,12 @@
 package lucuma.itc.service
 
 import lucuma.sso.client.SsoClient.UserInfo
-import lucuma.sso.client.{SsoClient, SsoJwtReader}
-import lucuma.sso.client.util.{GpgPublicKeyReader, JwtDecoder}
+import lucuma.sso.client.{ SsoClient, SsoJwtReader }
+import lucuma.sso.client.util.{ GpgPublicKeyReader, JwtDecoder }
 
-import cats.effect.{Async, Resource, Sync}
+import cats.effect.{ Async, Resource, Sync }
 import cats.syntax.all._
-import ciris.{ConfigDecoder, ConfigValue, env, prop}
+import ciris.{ ConfigDecoder, ConfigValue, env, prop }
 import org.http4s.Uri
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.http4s.client.Client
@@ -37,9 +37,9 @@ final case class Config(
     httpClientResource[F].evalMap { httpClient =>
       SsoClient.initial(
         serviceJwt = serviceJwt,
-        ssoRoot    = ssoRoot,
-        jwtReader  = jwtReader[F],
-        httpClient = httpClient,
+        ssoRoot = ssoRoot,
+        jwtReader = jwtReader[F],
+        httpClient = httpClient
       )
     }
 }
@@ -57,10 +57,10 @@ object Config {
     }
 
   def envOrProp[F[_]](name: String): ConfigValue[F, String] =
-    env(name) or prop(name)
+    env(name).or(prop(name))
 
   def fromCiris[F[_]]: ConfigValue[F, Config] = (
-    (envOrProp("ODB_PORT") or envOrProp("PORT") or ConfigValue.default("8080")).as[Int],
+    envOrProp("ODB_PORT").or(envOrProp("PORT")).or(ConfigValue.default("8080")).as[Int],
     envOrProp("ODB_SSO_ROOT").as[Uri],
     envOrProp("ODB_SSO_PUBLIC_KEY").as[PublicKey],
     envOrProp("ODB_SERVICE_JWT")

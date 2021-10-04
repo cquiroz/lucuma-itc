@@ -31,7 +31,7 @@ object ItcService {
 
     object QueryMatcher         extends QueryParamDecoderMatcher[String]("query")
     object OperationNameMatcher extends OptionalQueryParamDecoderMatcher[String]("operationName")
-    object VariablesMatcher extends OptionalValidatingQueryParamDecoderMatcher[Json]("variables")
+    object VariablesMatcher     extends OptionalValidatingQueryParamDecoderMatcher[Json]("variables")
 
     HttpRoutes.of[F] {
       // GraphQL query is embedded in the URI query string when queried via GET
@@ -50,13 +50,13 @@ object ItcService {
       // GraphQL query is embedded in a Json request body when queried via POST
       case req @ POST -> Root / "itc" =>
         for {
-          body <- req.as[Json]
-          obj  <- body.asObject.liftTo[F](InvalidMessageBodyFailure("Invalid GraphQL query"))
-          query <- obj("query")
-            .flatMap(_.asString)
-            .liftTo[F](InvalidMessageBodyFailure("Missing query field"))
-          op   = obj("operationName").flatMap(_.asString)
-          vars = obj("variables")
+          body   <- req.as[Json]
+          obj    <- body.asObject.liftTo[F](InvalidMessageBodyFailure("Invalid GraphQL query"))
+          query  <- obj("query")
+                      .flatMap(_.asString)
+                      .liftTo[F](InvalidMessageBodyFailure("Missing query field"))
+          op      = obj("operationName").flatMap(_.asString)
+          vars    = obj("variables")
           result <- service.runQuery(op, vars, query)
           resp   <- Ok(result)
         } yield resp

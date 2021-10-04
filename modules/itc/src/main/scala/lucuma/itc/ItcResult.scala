@@ -11,11 +11,11 @@ import io.circe.{ ACursor, Decoder, HCursor }
 final case class ItcResult(ccds: NonEmptyList[ItcCcd]) {
 
   // We may not need these
-  def maxPeakPixelFlux:   Int    = ccds.map(_.peakPixelFlux).maximum.toInt
-  def maxAdu:             Int    = ccds.map(_.adu).maximum
+  def maxPeakPixelFlux: Int      = ccds.map(_.peakPixelFlux).maximum.toInt
+  def maxAdu: Int                = ccds.map(_.adu).maximum
   def maxPercentFullWell: Double = ccds.map(_.percentFullWell).maximum
-  def maxSingleSNRatio:   Double = ccds.map(_.singleSNRatio).maximum
-  def maxTotalSNRatio:    Double = ccds.map(_.totalSNRatio).maximum
+  def maxSingleSNRatio: Double   = ccds.map(_.singleSNRatio).maximum
+  def maxTotalSNRatio: Double    = ccds.map(_.totalSNRatio).maximum
 
 }
 

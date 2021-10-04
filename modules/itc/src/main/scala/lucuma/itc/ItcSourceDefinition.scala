@@ -34,7 +34,7 @@ object ItcSourceDefinition {
       p.spatialProfile match {
         case SpatialProfile.GaussianSource(_) => Left(p.magnitude.system)
         case SpatialProfile.PointSource       => Left(p.magnitude.system)
-        case SpatialProfile.UniformSource =>
+        case SpatialProfile.UniformSource     =>
           Right {
             p.magnitude.system match {
               case MagnitudeSystem.Vega           => SurfaceBrightness.Vega
@@ -55,8 +55,8 @@ object ItcSourceDefinition {
       import SpatialProfile._
       def apply(a: SpatialProfile): Json =
         a match {
-          case PointSource   => Json.obj("PointSource" -> Json.obj())
-          case UniformSource => Json.obj("UniformSource" -> Json.obj())
+          case PointSource           => Json.obj("PointSource" -> Json.obj())
+          case UniformSource         => Json.obj("UniformSource" -> Json.obj())
           case g @ GaussianSource(_) =>
             Json.obj(
               "GaussianSource" -> Json.obj(
@@ -71,15 +71,15 @@ object ItcSourceDefinition {
       import SpectralDistribution._
       def apply(a: SpectralDistribution): Json =
         a match {
-          case BlackBody(t) =>
+          case BlackBody(t)       =>
             Json.obj(
               "BlackBody" -> Json.obj(
                 "temperature" -> Json.fromDoubleOrNull(t.value.value.toDouble)
               )
             )
-          case PowerLaw(i) =>
+          case PowerLaw(i)        =>
             Json.obj("PowerLaw" -> Json.obj("index" -> Json.fromDoubleOrNull(i.toDouble)))
-          case Library(Left(s)) =>
+          case Library(Left(s))   =>
             Json.obj("Library" -> Json.obj("LibraryStar" -> Json.fromString(s.ocs2Tag)))
           case Library(Right(ns)) =>
             Json.obj("Library" -> Json.obj("LibraryNonStar" -> Json.fromString(ns.ocs2Tag)))

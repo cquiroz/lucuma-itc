@@ -1,39 +1,33 @@
-val attoVersion                 = "0.9.5"
-val catsEffectVersion           = "3.2.7"
-val catsMtlVersion              = "1.2.1"
+val catsEffectVersion           = "3.2.9"
 val catsTestkitScalaTestVersion = "2.1.5"
 val catsVersion                 = "2.6.1"
 val catsScalacheckVersion       = "0.3.1"
 val catsTimeVersion             = "0.3.4"
-val circeOpticsVersion          = "0.14.1"
 val circeVersion                = "0.14.1"
 val cirisVersion                = "2.1.1"
-val clueVersion                 = "0.17.0"
-val http4sVersion               = "0.23.3"
+val clueVersion                 = "0.18.2"
+val http4sVersion               = "0.23.4"
 val http4sJdkHttpClientVersion  = "0.5.0"
-val fs2Version                  = "3.1.1"
-val jawnVersion                 = "1.2.0"
+val fs2Version                  = "3.1.3"
 val kindProjectorVersion        = "0.13.2"
-val logbackVersion              = "1.2.5"
-val lucumaCoreVersion           = "0.13.1"
+val logbackVersion              = "1.2.6"
+val lucumaCoreVersion           = "0.13.2"
 val log4catsVersion             = "2.1.1"
 val monocleVersion              = "3.1.0"
-val munitCatsEffectVersion      = "1.0.5"
+val munitCatsEffectVersion      = "1.0.6"
 val refinedVersion              = "0.9.27"
-val singletonOpsVersion         = "0.5.2"
 val grackleVersion              = "0.1.13"
 val natcchezHttp4sVersion       = "0.1.3"
 val natchezVersion              = "0.1.5"
-
-val munitVersion           = "0.7.29"
-val disciplineMunitVersion = "1.0.9"
+val munitVersion                = "0.7.29"
+val disciplineMunitVersion      = "1.0.9"
 
 inThisBuild(
   Seq(
     homepage                      := Some(url("https://github.com/gemini-hlsw/lucuma-itc")),
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     addCompilerPlugin(
-      ("org.typelevel" % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
+      ("org.typelevel"             % "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
     )
   ) ++ lucumaPublishSettings
 )
@@ -58,9 +52,6 @@ lazy val itc = project
   .settings(commonSettings)
   .settings(
     name := "lucuma-odb-itc",
-    scalacOptions ++= Seq(
-      "-Ymacro-annotations"
-    ),
     libraryDependencies ++= Seq(
       "edu.gemini"    %% "lucuma-core"              % lucumaCoreVersion,
       "org.typelevel" %% "cats-core"                % catsVersion,

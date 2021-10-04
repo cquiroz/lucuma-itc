@@ -43,9 +43,9 @@ object Main extends IOApp {
     // Spin up the server ...
     for {
       exitCode <- BlazeServerBuilder[F](global)
-        .bindHttp(cfg.port, "0.0.0.0")
-        .withHttpApp(app)
-        .serve
+                    .bindHttp(cfg.port, "0.0.0.0")
+                    .withHttpApp(app)
+                    .serve
     } yield exitCode
   }.drain
 
@@ -54,8 +54,8 @@ object Main extends IOApp {
       cfg <- Config.fromCiris.load(Async[IO])
       // log  <- Slf4jLogger.create[IO]
       map <- ItcMapping[IO]
-      _ <- ItcImpl.forHeroku[IO].use { itc =>
-        stream(map, itc, cfg).compile.drain
-      }
+      _   <- ItcImpl.forHeroku[IO].use { itc =>
+               stream(map, itc, cfg).compile.drain
+             }
     } yield ExitCode.Success
 }
