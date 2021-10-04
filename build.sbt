@@ -51,7 +51,7 @@ lazy val itc = project
   .enablePlugins(AutomateHeaderPlugin)
   .settings(commonSettings)
   .settings(
-    name := "lucuma-odb-itc",
+    name := "lucuma-itc",
     libraryDependencies ++= Seq(
       "edu.gemini"    %% "lucuma-core"              % lucumaCoreVersion,
       "org.typelevel" %% "cats-core"                % catsVersion,
@@ -72,7 +72,7 @@ lazy val service = project
   .dependsOn(itc)
   .settings(commonSettings)
   .settings(
-    name := "lucuma-odb-api-service",
+    name := "lucuma-itc-service",
     scalacOptions ++= Seq(
       "-Ymacro-annotations"
     ),
