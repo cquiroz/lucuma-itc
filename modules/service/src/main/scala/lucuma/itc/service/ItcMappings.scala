@@ -5,7 +5,7 @@ package lucuma.itc.service
 
 import cats._
 import cats.data._
-import cats.effect.{Unique => _, _}
+import cats.effect.{ Unique => _, _ }
 import cats.syntax.all._
 import coulomb.refined._
 import coulomb.si.Kelvin
