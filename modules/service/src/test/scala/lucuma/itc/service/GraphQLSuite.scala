@@ -12,7 +12,7 @@ import io.circe.literal._
 
 class GraphQLSuite extends munit.CatsEffectSuite {
   val service: IO[HttpRoutes[IO]] =
-    ItcMapping[IO].map(m => ItcService.routes[IO](ItcService.service[IO](m)))
+    ItcMapping[IO].map(m => ItcService.routes[IO](ItcService.service[IO](m, null)))
   val itcFixture = ResourceSuiteLocalFixture(
     "itc",
     Resource.make(service)(_ => IO.unit)
@@ -84,7 +84,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     )
   }
 
-  test("bad redshift".ignore) {
+  test("bad redshift") {
     query(
       """
         query {
@@ -101,9 +101,11 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             spatialProfile: {
               sourceType: POINT_SOURCE
             },
-            spectralDistribution: STELLAR,
+            spectralDistribution: {
+              stellar: A0III
+            },
             magnitude: {
-              band: Y,
+              band: UC,
               system: AB,
               value: 5
             }
@@ -196,9 +198,10 @@ class GraphQLSuite extends munit.CatsEffectSuite {
               }
             },
             magnitude: {
-              band: Y,
-              system: AB,
-              value: 5
+              band: AP,
+              value: 5,
+              error: 1.2,
+              system: JY
             }
           }) {
             results {
@@ -295,7 +298,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     )
   }
 
-  test("gaussian source".ignore) {
+  test("gaussian source") {
     query(
       """
         query {
@@ -315,7 +318,11 @@ class GraphQLSuite extends munit.CatsEffectSuite {
                 microarcseconds: 1000
               }
             },
-            spectralDistribution: STELLAR,
+            spectralDistribution: {
+              powerLaw: {
+                index: 1000
+              }
+            },
             magnitude: {
               band: Y,
               system: AB,

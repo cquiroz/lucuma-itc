@@ -5,7 +5,7 @@ package lucuma.itc.service
 
 import lucuma.itc.ItcImpl
 
-import cats.effect.{Async, ExitCode, IO, IOApp}
+import cats.effect.{ Async, ExitCode, IO, IOApp }
 import cats.implicits._
 import fs2.Stream
 import org.http4s.HttpApp
@@ -22,26 +22,27 @@ import lucuma.odb.itc.Itc
 // #server
 object Main extends IOApp {
 
-  def stream[F[_]: Async: Itc](
+  def stream[F[_]: Async](
     mapping: Mapping[F],
-    cfg: Config
+    itc:     Itc[F],
+    cfg:     Config
   ): Stream[F, Nothing] = {
-    val itcService   = ItcService.service[F](mapping)
+    val itcService = ItcService.service[F](mapping, itc)
 
     def app: HttpApp[F] =
-      Logger.httpApp(logHeaders = true, logBody = false)((
+      Logger.httpApp(logHeaders = true, logBody = false)(
+        (
+          // Routes for static resources, ie. GraphQL Playground
+          resourceServiceBuilder[F]("/assets").toRoutes <+>
 
-        // Routes for static resources, ie. GraphQL Playground
-        resourceServiceBuilder[F]("/assets").toRoutes <+>
-
-          // Routes for the ITC GraphQL service
-          ItcService.routes[F](itcService)
-
-      ).orNotFound)
+            // Routes for the ITC GraphQL service
+            ItcService.routes[F](itcService)
+        ).orNotFound
+      )
 
     // Spin up the server ...
     for {
-      exitCode  <- BlazeServerBuilder[F](global)
+      exitCode <- BlazeServerBuilder[F](global)
         .bindHttp(cfg.port, "0.0.0.0")
         .withHttpApp(app)
         .serve
@@ -50,12 +51,11 @@ object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      cfg  <- Config.fromCiris.load(Async[IO])
+      cfg <- Config.fromCiris.load(Async[IO])
       // log  <- Slf4jLogger.create[IO]
-      map  <- ItcMapping[IO]
-      _    <- ItcImpl.forHeroku[IO].use { itc =>
-        stream(map, cfg)(Async[IO], itc).compile.drain
+      map <- ItcMapping[IO]
+      _ <- ItcImpl.forHeroku[IO].use { itc =>
+        stream(map, itc, cfg).compile.drain
       }
     } yield ExitCode.Success
 }
-

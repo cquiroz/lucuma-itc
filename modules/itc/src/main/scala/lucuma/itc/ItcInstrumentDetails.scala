@@ -19,19 +19,25 @@ object ItcInstrumentDetails {
       def apply(a: ObservingMode.Spectroscopy.GmosNorth): Json =
         Json.obj(
           // Translate observing mode to OCS2 style
-          "centralWavelength" -> Json.fromString(s"${Wavelength.decimalNanometers.reverseGet(a.λ)} nm"),
-          "filter"            -> Json.obj("FilterNorth"    -> a.filter.fold[Json](Json.fromString("NONE"))(f => Json.fromString("g_G0301"))),
-          "grating"           -> Json.obj("DisperserNorth" -> Json.fromString(a.disperser.tag)),
-          "fpMask"            -> Json.obj("FPUnitNorth"    -> Json.fromString("LONGSLIT_4")),
+          "centralWavelength" -> Json.fromString(
+            s"${Wavelength.decimalNanometers.reverseGet(a.λ)} nm"
+          ),
+          "filter" -> Json.obj(
+            "FilterNorth" -> a.filter.fold[Json](Json.fromString("NONE"))(_ =>
+              Json.fromString("g_G0301")
+            )
+          ),
+          "grating" -> Json.obj("DisperserNorth" -> Json.fromString(a.disperser.tag)),
+          "fpMask"  -> Json.obj("FPUnitNorth" -> Json.fromString("LONGSLIT_4")),
           // Remaining fields are defaulted for now.
-          "spectralBinning"   -> Json.fromInt(1),
-          "site"              -> Json.fromString("GN"),
-          "ccdType"           -> Json.fromString("HAMAMATSU"),
-          "ampReadMode"       -> Json.fromString("SLOW"),
-          "builtinROI"        -> Json.fromString("FULL_FRAME"),
-          "spatialBinning"    -> Json.fromInt(1),
-          "customSlitWidth"   -> Json.Null,
-          "ampGain"           -> Json.fromString("LOW"),
+          "spectralBinning" -> Json.fromInt(1),
+          "site"            -> Json.fromString("GN"),
+          "ccdType"         -> Json.fromString("HAMAMATSU"),
+          "ampReadMode"     -> Json.fromString("SLOW"),
+          "builtinROI"      -> Json.fromString("FULL_FRAME"),
+          "spatialBinning"  -> Json.fromInt(1),
+          "customSlitWidth" -> Json.Null,
+          "ampGain"         -> Json.fromString("LOW")
         )
     }
 
@@ -39,7 +45,8 @@ object ItcInstrumentDetails {
     new Encoder[ItcInstrumentDetails] {
       def apply(a: ItcInstrumentDetails): Json =
         a.mode match {
-          case a: ObservingMode.Spectroscopy.GmosNorth => Json.obj("GmosParameters" -> encodeGmosNorthSpectroscopy(a))
+          case a: ObservingMode.Spectroscopy.GmosNorth =>
+            Json.obj("GmosParameters" -> encodeGmosNorthSpectroscopy(a))
         }
     }
 

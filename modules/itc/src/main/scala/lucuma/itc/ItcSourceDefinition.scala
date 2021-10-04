@@ -40,9 +40,12 @@ object ItcSourceDefinition {
         case SpatialProfile.UniformSource =>
           Right {
             p.magnitude.system match {
-              case MagnitudeSystem.Vega => SurfaceBrightness.Vega
-              case MagnitudeSystem.AB   => SurfaceBrightness.AB
-              case MagnitudeSystem.Jy   => SurfaceBrightness.Jy
+              case MagnitudeSystem.Vega           => SurfaceBrightness.Vega
+              case MagnitudeSystem.AB             => SurfaceBrightness.AB
+              case MagnitudeSystem.Jy             => SurfaceBrightness.Jy
+              case MagnitudeSystem.Watts          => SurfaceBrightness.Watts
+              case MagnitudeSystem.ErgsFrequency  => SurfaceBrightness.ErgsFrequency
+              case MagnitudeSystem.ErgsWavelength => SurfaceBrightness.ErgsWavelength
             }
           }
       },
@@ -73,7 +76,9 @@ object ItcSourceDefinition {
         a match {
           case BlackBody(t) =>
             Json.obj(
-              "BlackBody" -> Json.obj("temperature" -> Json.fromDoubleOrNull(t.value.value.toDouble))
+              "BlackBody" -> Json.obj(
+                "temperature" -> Json.fromDoubleOrNull(t.value.value.toDouble)
+              )
             )
           case PowerLaw(i) =>
             Json.obj("PowerLaw" -> Json.obj("index" -> Json.fromDoubleOrNull(i.toDouble)))

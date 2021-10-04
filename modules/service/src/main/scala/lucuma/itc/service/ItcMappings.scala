@@ -39,6 +39,10 @@ import monocle.std.these._
 import monocle.Focus
 import lucuma.odb.api.model.enum.StellarLibrarySpectrum
 import lucuma.odb.api.model.enum.NonStellarLibrarySpectrum
+import lucuma.core.enum.MagnitudeBand
+import lucuma.core.model.Magnitude
+import lucuma.core.math.MagnitudeValue
+import lucuma.core.enum.MagnitudeSystem
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -139,11 +143,13 @@ object ItcMapping extends Encoders {
 
   def computeItc[F[_]: Applicative](env: Cursor.Env): F[Result[SpectroscopyResults]] = {
     println(env.get[Wavelength]("wavelength"))
+    println(env.get[Wavelength]("simultaneousCoverage"))
     println(env.get[Redshift]("redshift"))
     println(env.get[types.numeric.PosInt]("resolution"))
     println(env.get[types.numeric.PosInt]("signalToNoise"))
     println(env.get[SpatialProfile]("spatialProfile"))
     println(env.get[SpectralDistribution]("spectralDistribution"))
+    println(env.get[Magnitude]("magnitude"))
     println(env)
     SpectroscopyResults(
       List(
@@ -230,13 +236,7 @@ object ItcMapping extends Encoders {
                   case (i, ("wavelength", ObjectValue(units))) =>
                     val wavelength: Option[Wavelength] = parseWavelength(units)
                     wavelength
-                      .map { w =>
-                        i.map(e =>
-                          e.copy(env = e.env.add(("wavelength", w)),
-                                 Select("spectroscopy", Nil, child)
-                          )
-                        )
-                      }
+                      .map(w => cursorEnvAdd("wavelength", w)(i))
                       .getOrElse(i.addProblem("Wavelength couldn't be parsed"))
 
                   // simultaneousCoverage
@@ -248,13 +248,7 @@ object ItcMapping extends Encoders {
                   case (i, ("simultaneousCoverage", ObjectValue(units))) =>
                     val wavelength: Option[Wavelength] = parseWavelength(units)
                     wavelength
-                      .map { w =>
-                        i.map(e =>
-                          e.copy(env = e.env.add(("simultaneousCoverage", w)),
-                                 Select("spectroscopy", Nil, child)
-                          )
-                        )
-                      }
+                      .map(w => cursorEnvAdd("simultaneousCoverage", w)(i))
                       .getOrElse(i.addProblem("Simultaneous coverage couldn't be parsed"))
 
                   // resolution
@@ -342,6 +336,45 @@ object ItcMapping extends Encoders {
                     val v = sd.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
                     i.addProblem(s"Spectral distribution value is not valid $v")
 
+                  // magnitude
+                  case (i,
+                        ("magnitude",
+                         ObjectValue(
+                           List(("band", TypedEnumValue(EnumValue(band, _, _, _))),
+                                ("value", value),
+                                ("error", error),
+                                ("system", sys)
+                           )
+                         )
+                        )
+                      ) =>
+                    val b = MagnitudeBand.fromTag(band.fromScreamingSnakeCase)
+                    val v = value match {
+                      case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
+                      case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
+                      case _             => none
+                    }
+                    val e = error match {
+                      case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
+                      case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
+                      case _             => none
+                    }
+                    val s = sys match {
+                      case TypedEnumValue(EnumValue(s, _, _, _)) =>
+                        MagnitudeSystem
+                          .fromTag(s.fromScreamingSnakeCase)
+                          .orElse(MagnitudeSystem.fromTag(s))
+                      case UntypedEnumValue(s) =>
+                        MagnitudeSystem
+                          .fromTag(s.fromScreamingSnakeCase)
+                          .orElse(MagnitudeSystem.fromTag(s))
+                      case _ => none
+                    }
+                    (v, b, s)
+                      .mapN(Magnitude(_, _, e, _))
+                      .map(cursorEnvAdd("magnitude", _)(i))
+                      .getOrElse(i.addProblem("Cannot parse magnitude"))
+
                   // redshift
                   case (i, ("redshift", FloatValue(r))) =>
                     val rs = Redshift(r)
@@ -352,7 +385,7 @@ object ItcMapping extends Encoders {
                   case (i, ("redshift", v)) =>
                     i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
                   case (e, _) => e
-                }
+                }.map(e => e.copy(child = Select("spectroscopy", Nil, child)))
             })
           )
       }
