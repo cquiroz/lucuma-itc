@@ -35,14 +35,13 @@ import lucuma.core.model.SpatialProfile
 import lucuma.core.model.SpectralDistribution
 import coulomb.refined._
 import coulomb.si.Kelvin
-import monocle.std.these._
-import monocle.Focus
 import lucuma.core.enum.StellarLibrarySpectrum
 import lucuma.core.enum.NonStellarLibrarySpectrum
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.model.Magnitude
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.enum.MagnitudeSystem
+import lucuma.itc.service.syntax.all._
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -105,32 +104,6 @@ trait Encoders {
 }
 
 object ItcMapping extends Encoders {
-  implicit class MoreOptionOps[A](self: Option[A]) {
-    def toRightIorNec[E](e: => E): Ior[NonEmptyChain[E], A] =
-      self match {
-        case Some(a) => Ior.Right(a)
-        case None    => Ior.Left(NonEmptyChain.of(e))
-      }
-  }
-
-  implicit class MoreIdOps[A](self: A) {
-
-    def leftIorNec[B]: Ior[NonEmptyChain[A], B] =
-      Ior.Left(NonEmptyChain.of(self))
-  }
-
-  implicit class IorOps[A](self: IorNec[Problem, A]) {
-    def addProblem(problem: String): Ior[NonEmptyChain[Problem], A] =
-      self.addLeft(NonEmptyChain.of(Problem(problem)))
-  }
-
-  implicit class StringOps(val self: String) extends AnyVal {
-    def fromScreamingSnakeCase: String =
-      self.split("_").map(_.toLowerCase.capitalize).mkString("")
-  }
-  def cursorEnv[A] = theseRight[A, Environment].andThen(Focus[Environment](_.env))
-  def cursorEnvAdd[A, B](key: String, value: B): Ior[A, Environment] => Ior[A, Environment] =
-    cursorEnv[A].modify(_.add((key, value)))
 
   // In principle this is a pure operation because resources are constant values, but the potential
   // for error in dev is high and it's nice to handle failures in `F`.
