@@ -10,8 +10,8 @@ val http4sVersion               = "0.23.4"
 val http4sJdkHttpClientVersion  = "0.5.0"
 val fs2Version                  = "3.1.3"
 val kindProjectorVersion        = "0.13.2"
-val logbackVersion              = "1.2.6"
 val lucumaCoreVersion           = "0.13.2"
+val slf4jVersion                = "1.7.32"
 val log4catsVersion             = "2.1.1"
 val monocleVersion              = "3.1.0"
 val munitCatsEffectVersion      = "1.0.6"
@@ -32,7 +32,7 @@ inThisBuild(
   ) ++ lucumaPublishSettings
 )
 
-lazy val commonSettings = Seq(
+lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-testkit"           % catsVersion                 % "test",
     "org.typelevel" %% "cats-testkit-scalatest" % catsTestkitScalaTestVersion % "test"
@@ -72,11 +72,12 @@ lazy val service = project
   .dependsOn(itc)
   .settings(commonSettings)
   .settings(
-    name := "lucuma-itc-service",
+    name              := "lucuma-itc-service",
     scalacOptions ++= Seq(
       "-Ymacro-annotations"
     ),
     scalacOptions -= "-Vtype-diffs",
+    reStart / envVars := Map("ITC_URL" -> "https://gemini-itc.herokuapp.com/json"),
     libraryDependencies ++= Seq(
       "edu.gemini"    %% "gsp-graphql-core"    % grackleVersion,
       "edu.gemini"    %% "gsp-graphql-generic" % grackleVersion,
@@ -90,7 +91,7 @@ lazy val service = project
       "org.typelevel" %% "cats-effect"         % catsEffectVersion,
       "is.cir"        %% "ciris"               % cirisVersion,
       "org.typelevel" %% "log4cats-slf4j"      % log4catsVersion,
-      "ch.qos.logback" % "logback-classic"     % logbackVersion,
+      "org.slf4j"      % "slf4j-simple"        % slf4jVersion,
       "org.http4s"    %% "http4s-core"         % http4sVersion,
       "org.http4s"    %% "http4s-blaze-server" % http4sVersion,
       "org.typelevel" %% "munit-cats-effect-3" % munitCatsEffectVersion % Test

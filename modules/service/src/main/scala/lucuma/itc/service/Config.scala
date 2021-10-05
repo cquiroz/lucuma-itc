@@ -3,6 +3,7 @@
 
 package lucuma.itc.service
 
+import cats.syntax.all._
 import ciris.ConfigDecoder
 import ciris.ConfigValue
 import ciris.env
@@ -12,7 +13,7 @@ import org.http4s.Uri
 /**
  * Application configuration.
  */
-final case class Config(port: Int)
+final case class Config(port: Int, itcUrl: Uri)
 
 object Config {
 
@@ -25,10 +26,11 @@ object Config {
     env(name).or(prop(name))
 
   def fromCiris[F[_]]: ConfigValue[F, Config] =
-    envOrProp("ITC_PORT")
-      .or(envOrProp("PORT"))
-      .or(ConfigValue.default("8080"))
-      .as[Int]
-      .map(Config.apply)
+    (envOrProp("ITC_PORT")
+       .or(envOrProp("PORT"))
+       .or(ConfigValue.default("8080"))
+       .as[Int],
+     envOrProp("ITC_URL").as[Uri]
+    ).parMapN(Config.apply)
 
 }
