@@ -8,7 +8,6 @@ import cats.effect.kernel.Async
 import cats.implicits._
 import edu.gemini.grackle.Mapping
 import io.circe._
-import lucuma.itc.Itc
 import org.http4s.HttpRoutes
 import org.http4s.InvalidMessageBodyFailure
 import org.http4s.ParseFailure
@@ -66,9 +65,8 @@ object ItcService {
     }
   }
 
-  def service[F[_]: Async](mapping: Mapping[F], itc: Itc[F]): ItcService[F] =
+  def service[F[_]: Async](mapping: Mapping[F]): ItcService[F] =
     new ItcService[F] {
-      println(itc)
       def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json] =
         mapping.compileAndRun(query, op, vars)
     }

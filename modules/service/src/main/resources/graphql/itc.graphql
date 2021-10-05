@@ -18,10 +18,27 @@ interface ItcResult {
   # Result type
   resultType: String!
 }
+# Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
+type Duration {
+  # Duration in µs
+  microseconds: Long!
+
+  # Duration in ms
+  milliseconds: BigDecimal!
+
+  # Duration in seconds
+  seconds: BigDecimal!
+
+  # Duration in minutes
+  minutes: BigDecimal!
+
+  # Duration in hours
+  hours: BigDecimal!
+}
 
 type ItcSuccess implements ItcResult {
-  # Exposure time in milliseconds
-  exposureTime: Long!
+  # Exposure time duration
+  exposureTime: Duration!
 
   # Exposures
   exposures: Int!

@@ -9,10 +9,25 @@ import org.http4s.syntax.all._
 import org.http4s.circe._
 import io.circe.Json
 import io.circe.literal._
+import lucuma.itc.Itc
+import lucuma.itc.search.TargetProfile
+import lucuma.itc.search.ObservingMode
+import scala.concurrent.duration._
 
 class GraphQLSuite extends munit.CatsEffectSuite {
+  val itc = new Itc[IO] {
+    def calculate(
+      targetProfile: TargetProfile,
+      observingMode: ObservingMode,
+      signalToNoise: Int
+    ): IO[Itc.Result] =
+      IO.pure(
+        Itc.Result.Success(1.seconds, 10, 10)
+      )
+  }
+
   val service: IO[HttpRoutes[IO]] =
-    ItcMapping[IO].map(m => ItcService.routes[IO](ItcService.service[IO](m, null)))
+    ItcMapping[IO](itc).map(m => ItcService.routes[IO](ItcService.service[IO](m)))
   val itcFixture                  = ResourceSuiteLocalFixture(
     "itc",
     Resource.make(service)(_ => IO.unit)
@@ -69,7 +84,9 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             results {
               itc {
                 ... on ItcSuccess {
-                  exposureTime
+                  exposureTime {
+                    milliseconds
+                  }
                 }
               }
             }
@@ -114,7 +131,9 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             results {
               itc {
                 ... on ItcSuccess {
-                  exposureTime
+                  exposureTime {
+                    seconds
+                  }
                 }
               }
             }
@@ -159,7 +178,9 @@ class GraphQLSuite extends munit.CatsEffectSuite {
             results {
               itc {
                 ... on ItcSuccess {
-                  exposureTime
+                  exposureTime {
+                    microseconds
+                  }
                 }
               }
             }
@@ -213,6 +234,9 @@ class GraphQLSuite extends munit.CatsEffectSuite {
               itc {
                 ... on ItcSuccess {
                   exposures
+                  exposureTime {
+                    seconds
+                  }
                 }
               }
             }
@@ -227,11 +251,14 @@ class GraphQLSuite extends munit.CatsEffectSuite {
                 {
                   "mode": {
                     "wavelength": {
-                      "nanometers": 1.0
+                      "nanometers": 1.00
                     }
                   },
                   "itc": {
-                      "exposures": 10
+                    "exposureTime": {
+                      "seconds": 1
+                    },
+                    "exposures": 10
                   }
                 }
               ]

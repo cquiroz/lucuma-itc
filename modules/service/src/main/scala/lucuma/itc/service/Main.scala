@@ -10,7 +10,6 @@ import cats.effect.IOApp
 import cats.implicits._
 import edu.gemini.grackle.Mapping
 import fs2.Stream
-import lucuma.itc.Itc
 import lucuma.itc.ItcImpl
 import org.http4s.HttpApp
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -24,10 +23,9 @@ object Main extends IOApp {
 
   def stream[F[_]: Async](
     mapping: Mapping[F],
-    itc:     Itc[F],
     cfg:     Config
   ): Stream[F, Nothing] = {
-    val itcService = ItcService.service[F](mapping, itc)
+    val itcService = ItcService.service[F](mapping)
 
     def app: HttpApp[F] =
       Logger.httpApp(logHeaders = true, logBody = false)(
@@ -53,9 +51,10 @@ object Main extends IOApp {
     for {
       cfg <- Config.fromCiris.load(Async[IO])
       // log  <- Slf4jLogger.create[IO]
-      map <- ItcMapping[IO]
-      _   <- ItcImpl.forHeroku[IO].use { itc =>
-               stream(map, itc, cfg).compile.drain
+      _   <- ItcImpl.forHeroku[IO].use {
+               ItcMapping[IO](_).flatMap { map =>
+                 stream(map, cfg).compile.drain
+               }
              }
     } yield ExitCode.Success
 }

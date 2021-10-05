@@ -7,8 +7,12 @@ import cats._
 import cats.data._
 import cats.effect.{ Unique => _, _ }
 import cats.syntax.all._
+import coulomb._
 import coulomb.refined._
 import coulomb.si.Kelvin
+import coulomb.si._
+import coulomb.siprefix._
+import coulomb.time._
 import edu.gemini.grackle._
 import edu.gemini.grackle.circe.CirceMapping
 import eu.timepit.refined._
@@ -33,9 +37,12 @@ import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
 import lucuma.itc.search.Result.Spectroscopy
 import lucuma.itc.search.SpectroscopyResults
+import lucuma.itc.search.TargetProfile
 import lucuma.itc.service.syntax.all._
+import spire.math.Rational
 
 import java.math.RoundingMode
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 import scala.io.Source
 import scala.util.Using
@@ -47,10 +54,22 @@ import QueryCompiler._
 trait Encoders {
   import io.circe.generic.semiauto._
   import io.circe.syntax._
+  type Nanosecond  = Nano %* Second
+  type Microsecond = Micro %* Second
+  type Millisecond = Milli %* Second
+
   implicit val encoderFiniteDuration: Encoder[FiniteDuration] = new Encoder[FiniteDuration] {
-    final def apply(d: FiniteDuration): Json = Json.obj(
-      ("seconds", Json.fromLong(d.toSeconds))
-    )
+    type Micro
+    final def apply(d: FiniteDuration): Json = {
+      val value = d.toNanos.withUnit[Nanosecond]
+      Json.obj(
+        ("microseconds", Json.fromLong(value.toUnit[Microsecond].value)),
+        ("milliseconds", Json.fromBigDecimal(value.to[BigDecimal, Millisecond].value)),
+        ("seconds", Json.fromBigDecimal(value.to[BigDecimal, Second].value)),
+        ("minutes", Json.fromBigDecimal(value.to[BigDecimal, Minute].value)),
+        ("hours", Json.fromBigDecimal(value.to[BigDecimal, Hour].value))
+      )
+    }
   }
 
   implicit val encoderItcResultSuccess: Encoder[Itc.Result.Success] =
@@ -115,28 +134,54 @@ object ItcMapping extends Encoders {
       }.liftTo[F]
     }
 
-  def computeItc[F[_]: Applicative](env: Cursor.Env): F[Result[SpectroscopyResults]] = {
+  @nowarn
+  def computeItc[F[_]: ApplicativeError[*[_], Throwable]](
+    itc: Itc[F]
+  )(env: Cursor.Env): F[Result[SpectroscopyResults]] = {
+    println(env)
+    println(env.get[Rational]("resolution"))
     println(env.get[Wavelength]("wavelength"))
     println(env.get[Wavelength]("simultaneousCoverage"))
     println(env.get[Redshift]("redshift"))
-    println(env.get[types.numeric.PosInt]("resolution"))
+    println(env.get[Rational]("resolution"))
     println(env.get[types.numeric.PosInt]("signalToNoise"))
     println(env.get[SpatialProfile]("spatialProfile"))
     println(env.get[SpectralDistribution]("spectralDistribution"))
     println(env.get[Magnitude]("magnitude"))
-    println(env)
-    SpectroscopyResults(
-      List(
-        Spectroscopy(
-          ObservingMode.Spectroscopy.GmosNorth(Wavelength.unsafeFromInt(1000),
-                                               GmosNorthDisperser.B480_G5309,
-                                               GmosNorthFpu.Ifu2Slits,
-                                               None
-          ),
-          Itc.Result.Success(1.seconds, 10, 10)
+    (env.get[Wavelength]("wavelength"),
+     env.get[Wavelength]("simultaneousCoverage"),
+     env.get[Redshift]("redshift"),
+     env.get[Rational]("resolution"),
+     env.get[types.numeric.PosInt]("signalToNoise"),
+     env.get[SpatialProfile]("spatialProfile"),
+     env.get[SpectralDistribution]("spectralDistribution"),
+     env.get[Magnitude]("magnitude")
+    ).traverseN { (wv, sc, rs, r, sn, sp, sd, m) =>
+      itc
+        .calculate(
+          TargetProfile(sp, sd, m, rs),
+          ObservingMode.Spectroscopy
+            .GmosNorth(wv, GmosNorthDisperser.B480_G5309, GmosNorthFpu.Ifu2Slits, none),
+          sn.value
         )
-      )
-    ).rightIor.pure[F]
+        .map(r =>
+          SpectroscopyResults(
+            List(
+              Spectroscopy(
+                ObservingMode.Spectroscopy.GmosNorth(Wavelength.unsafeFromInt(1000),
+                                                     GmosNorthDisperser.B480_G5309,
+                                                     GmosNorthFpu.Ifu2Slits,
+                                                     None
+                ),
+                r
+              )
+            )
+          ).rightIor[NonEmptyChain[Problem]]
+        )
+        .handleError { case x =>
+          Problem(s"Error calculating itc $x").leftIorNec
+        }
+    }.map(_.getOrElse((Problem("Error calculating itc")).leftIorNec))
   }
 
   def parseFwhw(units: List[(String, Value)]): Option[Angle] =
@@ -173,7 +218,7 @@ object ItcMapping extends Encoders {
       case _                                    => None
     }
 
-  def apply[F[_]: Sync]: F[Mapping[F]] =
+  def apply[F[_]: Sync](itc: Itc[F]): F[Mapping[F]] =
     loadSchema[F].map { loadedSchema =>
       new CirceMapping[F] with ComputeMapping[F] {
 
@@ -181,6 +226,8 @@ object ItcMapping extends Encoders {
         val QueryType              = schema.ref("Query")
         val SpectroscopyResultType = schema.ref("spectroscopyResult")
         val BigDecimalType         = schema.ref("BigDecimal")
+        val LongType               = schema.ref("Long")
+        val DurationType           = schema.ref("Duration")
 
         val typeMappings =
           List(
@@ -189,11 +236,13 @@ object ItcMapping extends Encoders {
               fieldMappings = List(
                 ComputeRoot[SpectroscopyResults]("spectroscopy",
                                                  SpectroscopyResultType,
-                                                 computeItc[F]
+                                                 computeItc[F](itc)
                 )
               )
             ),
-            LeafMapping[BigDecimal](BigDecimalType)
+            LeafMapping[BigDecimal](BigDecimalType),
+            LeafMapping[Long](LongType),
+            LeafMapping[FiniteDuration](DurationType)
           )
 
         override val selectElaborator =
@@ -227,8 +276,7 @@ object ItcMapping extends Encoders {
 
                   // resolution
                   case (i, ("resolution", IntValue(r))) if r > 0 =>
-                    refineV[Positive](r)
-                      .fold(i.addProblem, v => cursorEnvAdd("resolution", v)(i))
+                    cursorEnvAdd("resolution", Rational(r))(i)
                   case (i, ("resolution", v))                    =>
                     i.addProblem(s"Not valid resolution value $v")
 
@@ -295,13 +343,21 @@ object ItcMapping extends Encoders {
                         StellarLibrarySpectrum
                           .fromTag(s.fromScreamingSnakeCase)
                           .orElse(StellarLibrarySpectrum.fromTag(s))
-                          .map(s => cursorEnvAdd("spectralDistribution", s)(i))
+                          .map(s =>
+                            cursorEnvAdd("spectralDistribution",
+                                         SpectralDistribution.Library(s.asLeft)
+                            )(i)
+                          )
                           .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
                       case ("nonStellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil =>
                         NonStellarLibrarySpectrum
                           .fromTag(s.fromScreamingSnakeCase)
                           .orElse(NonStellarLibrarySpectrum.fromTag(s))
-                          .map(s => cursorEnvAdd("spectralDistribution", s)(i))
+                          .map(s =>
+                            cursorEnvAdd("spectralDistribution",
+                                         SpectralDistribution.Library(s.asRight)
+                            )(i)
+                          )
                           .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
                       case _                                                            =>
                         i.addProblem("Cannot parse spatialDistribution")
@@ -358,7 +414,10 @@ object ItcMapping extends Encoders {
                     i.map(e => e.copy(env = e.env.add(("redshift", rs))))
                   case (i, ("redshift", v))             =>
                     i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
-                  case (e, _)                           => e
+
+                  // Unknown param
+                  case (e, (p, _)) => e.addProblem(s"Unexpected param $p")
+
                 }.map(e => e.copy(child = Select("spectroscopy", Nil, child)))
             })
           )

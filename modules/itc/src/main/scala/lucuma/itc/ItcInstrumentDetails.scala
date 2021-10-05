@@ -25,10 +25,10 @@ object ItcInstrumentDetails {
           ),
           "filter"            -> Json.obj(
             "FilterNorth" -> a.filter.fold[Json](Json.fromString("NONE"))(_ =>
-              Json.fromString("g_G0301")
+              Json.fromString("NONE")
             )
           ),
-          "grating"           -> Json.obj("DisperserNorth" -> Json.fromString(a.disperser.tag)),
+          "grating"           -> Json.obj("DisperserNorth" -> Json.fromString("R831_G5302")),
           "fpMask"            -> Json.obj("FPUnitNorth" -> Json.fromString("LONGSLIT_4")),
           // Remaining fields are defaulted for now.
           "spectralBinning"   -> Json.fromInt(1),
