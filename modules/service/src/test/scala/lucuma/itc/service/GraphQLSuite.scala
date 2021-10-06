@@ -4,14 +4,16 @@
 package lucuma.itc.service
 
 import cats.effect._
-import org.http4s._
-import org.http4s.syntax.all._
-import org.http4s.circe._
 import io.circe.Json
 import io.circe.literal._
 import lucuma.itc.Itc
-import lucuma.itc.search.TargetProfile
 import lucuma.itc.search.ObservingMode
+import lucuma.itc.search.TargetProfile
+import natchez.Trace.Implicits.noop
+import org.http4s._
+import org.http4s.circe._
+import org.http4s.syntax.all._
+
 import scala.concurrent.duration._
 
 class GraphQLSuite extends munit.CatsEffectSuite {

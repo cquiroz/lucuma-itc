@@ -3,18 +3,17 @@
 
 package lucuma.itc.service
 
-import cats._
 import cats.effect._
 import cats.implicits._
 import edu.gemini.grackle.Mapping
 import io.circe._
+import natchez.Trace
 import org.http4s.HttpRoutes
 import org.http4s.InvalidMessageBodyFailure
 import org.http4s.ParseFailure
 import org.http4s.QueryParamDecoder
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
-import natchez.Trace
 
 trait ItcService[F[_]] {
   def runQuery(op: Option[String], vars: Option[Json], query: String): F[Json]

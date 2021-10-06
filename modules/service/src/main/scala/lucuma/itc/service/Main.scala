@@ -6,27 +6,24 @@ package lucuma.itc.service
 import cats.Applicative
 import cats.effect._
 import cats.syntax.all._
-import edu.gemini.grackle.Mapping
-import fs2.Stream
 import lucuma.itc.ItcImpl
 import lucuma.itc.service.config._
-import natchez.log.Log
+import natchez.EntryPoint
 import natchez.honeycomb.Honeycomb
+import natchez.http4s.NatchezMiddleware
 import natchez.http4s.implicits._
+import natchez.log.Log
 import org.http4s.HttpApp
+import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.implicits._
+import org.http4s.server.Server
 import org.http4s.server.middleware.{ Logger => Http4sLogger }
 import org.http4s.server.staticcontent._
-import org.http4s._
-import org.http4s.implicits._
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.ExecutionContext.global
-import org.typelevel.log4cats.slf4j.Slf4jLogger
-import org.typelevel.log4cats.Logger
-import natchez.EntryPoint
-import natchez.Trace
-import natchez.http4s.NatchezMiddleware
-import org.http4s.server.Server
 
 // #server
 object Main extends IOApp {
@@ -77,10 +74,10 @@ object Main extends IOApp {
     } yield
 
     // Routes for static resources, ie. GraphQL Playground
+
     resourceServiceBuilder[F]("/assets").toRoutes <+>
       // Routes for the ITC GraphQL service
-      ItcService.routes(its)
-
+      NatchezMiddleware.server(ItcService.routes(its))
 
   /**
    * Our main server, as a resource that starts up our server on acquire and shuts it all down in
@@ -91,7 +88,8 @@ object Main extends IOApp {
       _  <- Resource.eval(banner)
       ep <- entryPointResource(cfg.honeycomb)
       ap <- ep.liftR(routes(cfg))
-      _  <- serverResource(ap.orNotFound, cfg)
+      _  <-
+        serverResource(Http4sLogger.httpApp(logHeaders = true, logBody = false)(ap.orNotFound), cfg)
     } yield ExitCode.Success
 
   def run(args: List[String]): IO[ExitCode] =
@@ -101,6 +99,6 @@ object Main extends IOApp {
       _   <- {
         implicit val l = log
         server[IO](cfg)
-      }.use(IO.pure)
+      }.use(_ => IO.never[ExitCode])
     } yield ExitCode.Success
 }

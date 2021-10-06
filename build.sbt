@@ -32,6 +32,11 @@ inThisBuild(
   ) ++ lucumaPublishSettings
 )
 
+addCommandAlias(
+  "fixImports",
+  "; scalafix OrganizeImports; Test/scalafix OrganizeImports; scalafmtAll"
+)
+
 lazy val commonSettings = lucumaGlobalSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-testkit"           % catsVersion                 % "test",

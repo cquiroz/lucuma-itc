@@ -3,9 +3,9 @@
 
 package lucuma.itc.service
 
+import ciris.ConfigValue
 import ciris.env
 import ciris.prop
-import ciris.ConfigValue
 
 package object config {
   def envOrProp[F[_]](name: String): ConfigValue[F, String] =
