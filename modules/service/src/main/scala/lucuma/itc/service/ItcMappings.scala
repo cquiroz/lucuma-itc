@@ -50,6 +50,9 @@ import scala.util.Using
 import Query._
 import Value._
 import QueryCompiler._
+import lucuma.core.enum.GmosNorthFilter
+
+final case class SpectroscopyMultiResults(results: List[SpectroscopyResults])
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -121,7 +124,16 @@ trait Encoders {
 
   implicit val encoderSpectroscopyResults: Encoder[SpectroscopyResults] =
     deriveEncoder[SpectroscopyResults]
+
+  implicit val encoderSpectroscopyMultiResults: Encoder[SpectroscopyMultiResults] =
+    deriveEncoder[SpectroscopyMultiResults]
 }
+
+final case class GmosNITCParams(
+  disperser: GmosNorthDisperser,
+  fpu:       GmosNorthFpu,
+  filter:    Option[GmosNorthFilter]
+)
 
 object ItcMapping extends Encoders {
 
@@ -173,53 +185,46 @@ object ItcMapping extends Encoders {
         }
     }.map(_.getOrElse((Problem("Error calculating itc")).leftIorNec))
 
-  @nowarn
   def spectroscopy[F[_]: ApplicativeError[*[_], Throwable]](
     itc: Itc[F]
-  )(env: Cursor.Env): F[Result[SpectroscopyResults]] = {
+  )(env: Cursor.Env): F[Result[SpectroscopyMultiResults]] = {
     println(env)
-    println(env.get[Rational]("resolution"))
     println(env.get[Wavelength]("wavelength"))
-    println(env.get[Wavelength]("simultaneousCoverage"))
     println(env.get[Redshift]("redshift"))
-    println(env.get[Rational]("resolution"))
     println(env.get[types.numeric.PosInt]("signalToNoise"))
     println(env.get[SpatialProfile]("spatialProfile"))
     println(env.get[SpectralDistribution]("spectralDistribution"))
     println(env.get[Magnitude]("magnitude"))
+    println(env.get[List[GmosNITCParams]]("modes"))
     (env.get[Wavelength]("wavelength"),
-     env.get[Wavelength]("simultaneousCoverage"),
      env.get[Redshift]("redshift"),
-     env.get[Rational]("resolution"),
      env.get[types.numeric.PosInt]("signalToNoise"),
      env.get[SpatialProfile]("spatialProfile"),
      env.get[SpectralDistribution]("spectralDistribution"),
-     env.get[Magnitude]("magnitude")
-    ).traverseN { (wv, sc, rs, r, sn, sp, sd, m) =>
-      itc
-        .calculate(
-          TargetProfile(sp, sd, m, rs),
-          ObservingMode.Spectroscopy
-            .GmosNorth(wv, GmosNorthDisperser.B480_G5309, GmosNorthFpu.Ifu2Slits, none),
-          sn.value
-        )
-        .map(r =>
-          SpectroscopyResults(
-            List(
-              Spectroscopy(
-                ObservingMode.Spectroscopy.GmosNorth(Wavelength.unsafeFromInt(1000),
-                                                     GmosNorthDisperser.B480_G5309,
-                                                     GmosNorthFpu.Ifu2Slits,
-                                                     None
-                ),
-                r
+     env.get[Magnitude]("magnitude"),
+     env.get[List[GmosNITCParams]]("modes")
+    ).traverseN { (wv, rs, sn, sp, sd, m, modes) =>
+      modes
+        .traverse { mode =>
+          itc
+            .calculate(
+              TargetProfile(sp, sd, m, rs),
+              ObservingMode.Spectroscopy
+                .GmosNorth(wv, mode.disperser, mode.fpu, mode.filter),
+              sn.value
+            )
+            .map(r =>
+              SpectroscopyResults(
+                List(
+                  Spectroscopy(
+                    ObservingMode.Spectroscopy.GmosNorth(wv, mode.disperser, mode.fpu, mode.filter),
+                    r
+                  )
+                )
               )
             )
-          ).rightIor[NonEmptyChain[Problem]]
-        )
-        .handleError { case x =>
-          Problem(s"Error calculating itc $x").leftIorNec
         }
+        .map(u => SpectroscopyMultiResults(u).rightIor[NonEmptyChain[Problem]])
     }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
   }
 
@@ -261,13 +266,14 @@ object ItcMapping extends Encoders {
     loadSchema[F].map { loadedSchema =>
       new CirceMapping[F] with ComputeMapping[F] {
 
-        val schema: Schema         = loadedSchema
-        val QueryType              = schema.ref("Query")
-        val SpectroscopyResultType = schema.ref("spectroscopyResult")
-        val BigDecimalType         = schema.ref("BigDecimal")
-        val LongType               = schema.ref("Long")
-        val DurationType           = schema.ref("Duration")
-        val typeMappings           =
+        val schema: Schema          = loadedSchema
+        val QueryType               = schema.ref("Query")
+        val SpectroscopyResultType  = schema.ref("SpectroscopyResult")
+        val SpectroscopyResultsType = schema.ref("SpectroscopyResults")
+        val BigDecimalType          = schema.ref("BigDecimal")
+        val LongType                = schema.ref("Long")
+        val DurationType            = schema.ref("Duration")
+        val typeMappings            =
           List(
             ObjectMapping(
               tpe = QueryType,
@@ -276,9 +282,9 @@ object ItcMapping extends Encoders {
                                                  SpectroscopyResultType,
                                                  basicCase[F](itc)
                 ),
-                ComputeRoot[SpectroscopyResults]("spectroscopy",
-                                                 SpectroscopyResultType,
-                                                 spectroscopy[F](itc)
+                ComputeRoot[SpectroscopyMultiResults]("spectroscopy",
+                                                      SpectroscopyResultsType,
+                                                      spectroscopy[F](itc)
                 )
               )
             ),
@@ -476,6 +482,43 @@ object ItcMapping extends Encoders {
               .getOrElse(i.addProblem("Cannot parse magnitude"))
         }
 
+        def instrumentModesPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                                    IorNec[Problem, Environment]
+        ] = { case (i, ("modes", ListValue(m))) =>
+          val modes = m.collect { case ObjectValue(List(("gmosN", gmosN))) =>
+            gmosN match {
+              case ObjectValue(
+                    List(("disperser", TypedEnumValue(EnumValue(d, _, _, _))),
+                         ("customMask", AbsentValue),
+                         ("fpu", TypedEnumValue(EnumValue(fpu, _, _, _))),
+                         ("filter", TypedEnumValue(EnumValue(f, _, _, _)))
+                    )
+                  ) =>
+                (GmosNorthDisperser
+                   .fromTag(d.fromScreamingSnakeCase)
+                   .orElse(GmosNorthDisperser.fromTag(d)),
+                 GmosNorthFpu
+                   .fromTag(fpu.fromScreamingSnakeCase)
+                   .orElse(GmosNorthFpu.fromTag(fpu))
+                   .orElse(
+                     GmosNorthFpu.all.find(
+                       _.tag.toLowerCase.replace("_", "") === fpu.toLowerCase.replace("_", "")
+                     )
+                   )
+                ).mapN(
+                  GmosNITCParams(_,
+                                 _,
+                                 GmosNorthFilter
+                                   .fromTag(f.fromScreamingSnakeCase)
+                                   .orElse(GmosNorthFilter.fromTag(f))
+                  )
+                )
+              case _ => none
+            }
+          }.flatten
+          cursorEnvAdd("modes", modes)(i)
+        }
+
         def fallback(a: (IorNec[Problem, Environment], (String, Value))) =
           a._1.addProblem(s"Unexpected param ${a._2._1}")
 
@@ -484,8 +527,6 @@ object ItcMapping extends Encoders {
             Map(
               QueryType -> {
                 case Select("spectroscopy", List(Binding("input", ObjectValue(wv))), child) =>
-                  println("HERE")
-                  println(wv)
                   wv.foldLeft(Environment(Cursor.Env(), child).rightIor[NonEmptyChain[Problem]]) {
                     case (e, c) =>
                       wavelengthPartial
@@ -494,6 +535,7 @@ object ItcMapping extends Encoders {
                         .orElse(spatialProfilePartial)
                         .orElse(spectralDistributionPartial)
                         .orElse(magnitudePartial)
+                        .orElse(instrumentModesPartial)
                         .applyOrElse(
                           (e, c),
                           fallback

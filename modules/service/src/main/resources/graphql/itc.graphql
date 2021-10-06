@@ -478,6 +478,12 @@ type ObservingModeSpectroscopy {
 
   # Resolution
   resolution: BigDecimal!
+
+  # params
+  params: InstrumentITCParams!
+
+  # instrument
+  instrument: InstrumentType
 }
 
 # An `Int` in the range from 1 to `Int.MaxValue`
@@ -487,12 +493,12 @@ type Query {
   basiccase(
     # Configuration alternatives search parameters.
     input: QueryConfigurationAlternativeSearchInput!
-  ): spectroscopyResult!
+  ): SpectroscopyResult!
 
   spectroscopy(
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
-  ): spectroscopyResult!
+  ): SpectroscopyResults!
 }
 
 input GmosSITCParams {
@@ -522,9 +528,6 @@ union InstrumentITCParams = GmosNITCParams | GmosSITCParams
 
 # Parent of instrument modes
 input InstrumentModes {
-  # Instrument to query
-  # instrument: InstrumentType
-
   # params
   gmosN: GmosNITCParams
 }
@@ -533,12 +536,6 @@ input InstrumentModes {
 input SpectroscopyModeInput {
   # Observing wavelength.
   wavelength: WavelengthModelInput!
-
-  # Minimum desired simultaneous wavelength coverage.
-  # simultaneousCoverage: WavelengthModelInput!
-
-  # Minimum desired resolution.
-  # resolution: PosInt!
 
   # Minimum desired signal-to-noise ratio.
   signalToNoise: PosInt!
@@ -732,9 +729,18 @@ input SpectralDistributionInput {
   nonStellar: NonStellarLibrarySpectrum
 }
 
-type spectroscopyResult {
+type SpectroscopyResult {
   # Search results
   results: [Result!]!
+}
+
+type ModeResults {
+  results: [Result!]!
+}
+
+type SpectroscopyResults {
+  # Search results
+  results: [ModeResults!]!
 }
 
 # The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
