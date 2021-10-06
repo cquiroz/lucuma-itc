@@ -1,19 +1,16 @@
 // Copyright (c) 2016-2021 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package lucuma.itc.service
+package lucuma.itc.service.config
 
 import cats.syntax.all._
-import ciris.ConfigDecoder
-import ciris.ConfigValue
-import ciris.env
-import ciris.prop
+import ciris._
 import org.http4s.Uri
 
 /**
  * Application configuration.
  */
-final case class Config(port: Int, itcUrl: Uri)
+final case class Config(port: Int, itcUrl: Uri, honeycomb: Option[HoneycombConfig])
 
 object Config {
 
@@ -22,15 +19,13 @@ object Config {
       Uri.fromString(s).toOption
     }
 
-  def envOrProp[F[_]](name: String): ConfigValue[F, String] =
-    env(name).or(prop(name))
-
-  def fromCiris[F[_]]: ConfigValue[F, Config] =
+  def config: ConfigValue[Effect, Config] =
     (envOrProp("ITC_PORT")
        .or(envOrProp("PORT"))
        .or(ConfigValue.default("8080"))
        .as[Int],
-     envOrProp("ITC_URL").as[Uri]
+     envOrProp("ITC_URL").as[Uri],
+     HoneycombConfig.config.option
     ).parMapN(Config.apply)
 
 }
