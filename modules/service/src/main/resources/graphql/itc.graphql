@@ -1,23 +1,67 @@
-# Gaussian source angle in appropriate units
-input GaussianSourceAngleInput {
-  microarcseconds: Long
-  milliarcseconds: BigDecimal
-  arcseconds: BigDecimal
+##############
+# From common schema
+##############
+
+# Instrument
+enum InstrumentType {
+  # InstrumentType AcqCam
+  ACQ_CAM
+
+  # InstrumentType Bhros
+  BHROS
+
+  # InstrumentType Flamingos2
+  FLAMINGOS2
+
+  # InstrumentType Ghost
+  GHOST
+
+  # InstrumentType GmosNorth
+  GMOS_NORTH
+
+  # InstrumentType GmosSouth
+  GMOS_SOUTH
+
+  # InstrumentType Gnirs
+  GNIRS
+
+  # InstrumentType Gpi
+  GPI
+
+  # InstrumentType Gsaoi
+  GSAOI
+
+  # InstrumentType Michelle
+  MICHELLE
+
+  # InstrumentType Nici
+  NICI
+
+  # InstrumentType Nifs
+  NIFS
+
+  # InstrumentType Niri
+  NIRI
+
+  # InstrumentType Phoenix
+  PHOENIX
+
+  # InstrumentType Trecs
+  TRECS
+
+  # InstrumentType Visitor
+  VISITOR
+
+  # InstrumentType Scorpio
+  SCORPIO
+
+  # InstrumentType Alopeke
+  ALOPEKE
+
+  # InstrumentType Zorro
+  ZORRO
 }
 
-type ItcError implements ItcResult {
-  # Message
-  msg: String!
-
-  # Result type
-  resultType: String!
-}
-
-# Possible itc result
-interface ItcResult {
-  # Result type
-  resultType: String!
-}
 # Equivalent time amount in several unit options (e.g., 120 seconds or 2 minutes)
 type Duration {
   # Duration in µs
@@ -34,20 +78,6 @@ type Duration {
 
   # Duration in hours
   hours: BigDecimal!
-}
-
-type ItcSuccess implements ItcResult {
-  # Exposure time duration
-  exposureTime: Duration!
-
-  # Exposures
-  exposures: Int!
-
-  # Signal/Noise ratio
-  signalToNoise: Int!
-
-  # Result type
-  resultType: String!
 }
 
 # Magnitude band
@@ -142,6 +172,306 @@ enum MagnitudeSystem {
   ERGS_FREQUENCY
 }
 
+type Wavelength {
+  # Wavelength in pm
+  picometers: Int!
+
+  # Wavelength in Å
+  angstroms: BigDecimal!
+
+  # Wavelength in nm
+  nanometers: BigDecimal!
+
+  # Wavelength in µm
+  micrometers: BigDecimal!
+}
+
+# Decimal value in Wavelength
+input WavelengthDecimalInput {
+  # decimal value in associated units
+  value: BigDecimal!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Integral value in Wavelength
+input WavelengthLongInput {
+  # integral value in associated units
+  value: Long!
+
+  # units for associated value
+  units: WavelengthUnits!
+}
+
+# Wavelength, choose one of the available units
+input WavelengthModelInput {
+  picometers: Long
+  angstroms: BigDecimal
+  nanometers: BigDecimal
+  micrometers: BigDecimal
+  fromLong: WavelengthLongInput
+  fromDecimal: WavelengthDecimalInput
+}
+
+# Wavelength units
+enum WavelengthUnits {
+  # WavelengthUnits Picometers
+  PICOMETERS
+
+  # WavelengthUnits Angstroms
+  ANGSTROMS
+
+  # WavelengthUnits Nanometers
+  NANOMETERS
+
+  # WavelengthUnits Micrometers
+  MICROMETERS
+}
+
+# GMOS North Disperser
+enum GmosNorthDisperser {
+  # GmosNorthDisperser B1200_G5301
+  B1200_G5301
+
+  # GmosNorthDisperser R831_G5302
+  R831_G5302
+
+  # GmosNorthDisperser B600_G5303
+  B600_G5303
+
+  # GmosNorthDisperser B600_G5307
+  B600_G5307
+
+  # GmosNorthDisperser R600_G5304
+  R600_G5304
+
+  # GmosNorthDisperser B480_G5309
+  B480_G5309
+
+  # GmosNorthDisperser R400_G5305
+  R400_G5305
+
+  # GmosNorthDisperser R150_G5306
+  R150_G5306
+
+  # GmosNorthDisperser R150_G5308
+  R150_G5308
+}
+# GMOS North FPU
+enum GmosNorthFpu {
+  # GmosNorthFpu Ns0
+  NS0
+
+  # GmosNorthFpu Ns1
+  NS1
+
+  # GmosNorthFpu Ns2
+  NS2
+
+  # GmosNorthFpu Ns3
+  NS3
+
+  # GmosNorthFpu Ns4
+  NS4
+
+  # GmosNorthFpu Ns5
+  NS5
+
+  # GmosNorthFpu LongSlit_0_25
+  LONG_SLIT_0_25
+
+  # GmosNorthFpu LongSlit_0_50
+  LONG_SLIT_0_50
+
+  # GmosNorthFpu LongSlit_0_75
+  LONG_SLIT_0_75
+
+  # GmosNorthFpu LongSlit_1_00
+  LONG_SLIT_1_00
+
+  # GmosNorthFpu LongSlit_1_50
+  LONG_SLIT_1_50
+
+  # GmosNorthFpu LongSlit_2_00
+  LONG_SLIT_2_00
+
+  # GmosNorthFpu LongSlit_5_00
+  LONG_SLIT_5_00
+
+  # GmosNorthFpu Ifu2Slits
+  IFU2_SLITS
+
+  # GmosNorthFpu IfuBlue
+  IFU_BLUE
+
+  # GmosNorthFpu IfuRed
+  IFU_RED
+}
+
+# GMOS North builtin-in FPU
+type GmosNorthBuiltinFpu {
+  # GMOS North builtin-fpu
+  builtin: GmosNorthFpu!
+}
+
+# GMOS Custom Mask
+type GmosCustomMask {
+  # Custom Mask Filename
+  filename: String!
+
+  # Custom Slit Width
+  slitWidth: GmosCustomSlitWidth!
+}
+
+# GMOS Custom Slit Width
+enum GmosCustomSlitWidth {
+  # GmosCustomSlitWidth CustomWidth_0_25
+  CUSTOM_WIDTH_0_25
+
+  # GmosCustomSlitWidth CustomWidth_0_50
+  CUSTOM_WIDTH_0_50
+
+  # GmosCustomSlitWidth CustomWidth_0_75
+  CUSTOM_WIDTH_0_75
+
+  # GmosCustomSlitWidth CustomWidth_1_00
+  CUSTOM_WIDTH_1_00
+
+  # GmosCustomSlitWidth CustomWidth_1_50
+  CUSTOM_WIDTH_1_50
+
+  # GmosCustomSlitWidth CustomWidth_2_00
+  CUSTOM_WIDTH_2_00
+
+  # GmosCustomSlitWidth CustomWidth_5_00
+  CUSTOM_WIDTH_5_00
+}
+
+# Either custom mask or builtin-FPU
+union GmosNorthFpuUnion = GmosCustomMask | GmosNorthBuiltinFpu
+
+# GMOS North Filter
+enum GmosNorthFilter {
+  # GmosNorthFilter GPrime
+  G_PRIME
+
+  # GmosNorthFilter RPrime
+  R_PRIME
+
+  # GmosNorthFilter IPrime
+  I_PRIME
+
+  # GmosNorthFilter ZPrime
+  Z_PRIME
+
+  # GmosNorthFilter Z
+  Z
+
+  # GmosNorthFilter Y
+  Y
+
+  # GmosNorthFilter GG455
+  GG455
+
+  # GmosNorthFilter OG515
+  OG515
+
+  # GmosNorthFilter RG610
+  RG610
+
+  # GmosNorthFilter CaT
+  CA_T
+
+  # GmosNorthFilter Ha
+  HA
+
+  # GmosNorthFilter HaC
+  HA_C
+
+  # GmosNorthFilter DS920
+  DS920
+
+  # GmosNorthFilter SII
+  SII
+
+  # GmosNorthFilter OIII
+  OIII
+
+  # GmosNorthFilter OIIIC
+  OIIIC
+
+  # GmosNorthFilter HeII
+  HE_II
+
+  # GmosNorthFilter HeIIC
+  HE_IIC
+
+  # GmosNorthFilter HartmannA_RPrime
+  HARTMANN_A_R_PRIME
+
+  # GmosNorthFilter HartmannB_RPrime
+  HARTMANN_B_R_PRIME
+
+  # GmosNorthFilter GPrime_GG455
+  G_PRIME_GG455
+
+  # GmosNorthFilter GPrime_OG515
+  G_PRIME_OG515
+
+  # GmosNorthFilter RPrime_RG610
+  R_PRIME_RG610
+
+  # GmosNorthFilter IPrime_CaT
+  I_PRIME_CA_T
+
+  # GmosNorthFilter ZPrime_CaT
+  Z_PRIME_CA_T
+
+  # GmosNorthFilter UPrime
+  U_PRIME
+}
+
+##############
+# ITC schema
+##############
+
+# Gaussian source angle in appropriate units
+input GaussianSourceAngleInput {
+  microarcseconds: Long
+  milliarcseconds: BigDecimal
+  arcseconds: BigDecimal
+}
+
+# ITC error result
+type ItcError implements ItcResult {
+  # Message
+  msg: String!
+
+  # Result type
+  resultType: String!
+}
+
+# Possible itc result
+interface ItcResult {
+  # Result type
+  resultType: String!
+}
+
+type ItcSuccess implements ItcResult {
+  # Exposure time duration
+  exposureTime: Duration!
+
+  # Exposures
+  exposures: Int!
+
+  # Signal/Noise ratio
+  signalToNoise: Int!
+
+  # Result type
+  resultType: String!
+}
+
 type ObservingModeSpectroscopy {
   # Wavelength in appropriate units
   wavelength: Wavelength!
@@ -155,9 +485,66 @@ scalar PosInt
 
 type Query {
   basiccase(
-    # Configuraton alternatives search parameters.
+    # Configuration alternatives search parameters.
     input: QueryConfigurationAlternativeSearchInput!
   ): spectroscopyResult!
+
+  spectroscopy(
+    # Query multiple modes in spectroscopy mode
+    input: SpectroscopyModeInput!
+  ): spectroscopyResult!
+}
+
+type GmosNITCParams {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  fpu: GmosNorthFpuUnion!
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+union InstrumentITCParams = GmosNITCParams | GmosSITCParams
+
+# Parent of instrument modes
+input InstrumentModes {
+  # Instrument to query
+  instrument: InstrumentType
+
+  # params
+  params: InstrumentITCParams
+}
+
+# Configuration alternatives query
+input SpectroscopyModeInput {
+  # Observing wavelength.
+  wavelength: WavelengthModelInput!
+
+  # Minimum desired simultaneous wavelength coverage.
+  # simultaneousCoverage: WavelengthModelInput!
+
+  # Minimum desired resolution.
+  # resolution: PosInt!
+
+  # Minimum desired signal-to-noise ratio.
+  signalToNoise: PosInt!
+
+  # Spatial profile PointSource/UniformSource/GaussianSource.
+  spatialProfile: SpatialProfileModelInput!
+
+  # Spectral distribution variant BlacBode/PowerLaw/Stellar/NonStellar.
+  spectralDistribution: SpectralDistributionInput!
+
+  # Target magnitude/system/band.
+  magnitude: MagnitudeCreateInput!
+
+  # Target redshift.
+  redshift: BigDecimal!
+
+  # Instrument modes
+  modes: [InstrumentModes]!
 }
 
 # Configuration alternatives query
@@ -331,63 +718,6 @@ input SpectralDistributionInput {
 
   # SpectralDistribution NonStellar
   nonStellar: NonStellarLibrarySpectrum
-}
-
-type Wavelength {
-  # Wavelength in pm
-  picometers: Int!
-
-  # Wavelength in Å
-  angstroms: BigDecimal!
-
-  # Wavelength in nm
-  nanometers: BigDecimal!
-
-  # Wavelength in µm
-  micrometers: BigDecimal!
-}
-
-# Decimal value in Wavelength
-input WavelengthDecimalInput {
-  # decimal value in associated units
-  value: BigDecimal!
-
-  # units for associated value
-  units: WavelengthUnits!
-}
-
-# Integral value in Wavelength
-input WavelengthLongInput {
-  # integral value in associated units
-  value: Long!
-
-  # units for associated value
-  units: WavelengthUnits!
-}
-
-# Wavelength, choose one of the available units
-input WavelengthModelInput {
-  picometers: Long
-  angstroms: BigDecimal
-  nanometers: BigDecimal
-  micrometers: BigDecimal
-  fromLong: WavelengthLongInput
-  fromDecimal: WavelengthDecimalInput
-}
-
-# Wavelength units
-enum WavelengthUnits {
-  # WavelengthUnits Picometers
-  PICOMETERS
-
-  # WavelengthUnits Angstroms
-  ANGSTROMS
-
-  # WavelengthUnits Nanometers
-  NANOMETERS
-
-  # WavelengthUnits Micrometers
-  MICROMETERS
 }
 
 type spectroscopyResult {
