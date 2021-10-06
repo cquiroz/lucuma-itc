@@ -495,12 +495,24 @@ type Query {
   ): spectroscopyResult!
 }
 
-type GmosNITCParams {
+input GmosSITCParams {
   # Gmos North disperser
   disperser: GmosNorthDisperser!
 
   # Gmos North Focal plane unit
-  fpu: GmosNorthFpuUnion!
+  fpu: GmosNorthFpu
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+input GmosNITCParams {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  customMask: GmosCustomMask
+
+  fpu: GmosNorthFpu
 
   # Gmos North filter
   filter: GmosNorthFilter
@@ -511,10 +523,10 @@ union InstrumentITCParams = GmosNITCParams | GmosSITCParams
 # Parent of instrument modes
 input InstrumentModes {
   # Instrument to query
-  instrument: InstrumentType
+  # instrument: InstrumentType
 
   # params
-  params: InstrumentITCParams
+  gmosN: GmosNITCParams
 }
 
 # Configuration alternatives query

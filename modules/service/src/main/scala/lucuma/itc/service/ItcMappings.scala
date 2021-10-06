@@ -135,7 +135,46 @@ object ItcMapping extends Encoders {
     }
 
   @nowarn
-  def computeItc[F[_]: ApplicativeError[*[_], Throwable]](
+  def basicCase[F[_]: ApplicativeError[*[_], Throwable]](
+    itc: Itc[F]
+  )(env: Cursor.Env): F[Result[SpectroscopyResults]] =
+    (env.get[Wavelength]("wavelength"),
+     env.get[Wavelength]("simultaneousCoverage"),
+     env.get[Redshift]("redshift"),
+     env.get[Rational]("resolution"),
+     env.get[types.numeric.PosInt]("signalToNoise"),
+     env.get[SpatialProfile]("spatialProfile"),
+     env.get[SpectralDistribution]("spectralDistribution"),
+     env.get[Magnitude]("magnitude")
+    ).traverseN { (wv, sc, rs, r, sn, sp, sd, m) =>
+      itc
+        .calculate(
+          TargetProfile(sp, sd, m, rs),
+          ObservingMode.Spectroscopy
+            .GmosNorth(wv, GmosNorthDisperser.B480_G5309, GmosNorthFpu.Ifu2Slits, none),
+          sn.value
+        )
+        .map(r =>
+          SpectroscopyResults(
+            List(
+              Spectroscopy(
+                ObservingMode.Spectroscopy.GmosNorth(Wavelength.unsafeFromInt(1000),
+                                                     GmosNorthDisperser.B480_G5309,
+                                                     GmosNorthFpu.Ifu2Slits,
+                                                     None
+                ),
+                r
+              )
+            )
+          ).rightIor[NonEmptyChain[Problem]]
+        )
+        .handleError { case x =>
+          Problem(s"Error calculating itc $x").leftIorNec
+        }
+    }.map(_.getOrElse((Problem("Error calculating itc")).leftIorNec))
+
+  @nowarn
+  def spectroscopy[F[_]: ApplicativeError[*[_], Throwable]](
     itc: Itc[F]
   )(env: Cursor.Env): F[Result[SpectroscopyResults]] = {
     println(env)
@@ -181,7 +220,7 @@ object ItcMapping extends Encoders {
         .handleError { case x =>
           Problem(s"Error calculating itc $x").leftIorNec
         }
-    }.map(_.getOrElse((Problem("Error calculating itc")).leftIorNec))
+    }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
   }
 
   def parseFwhw(units: List[(String, Value)]): Option[Angle] =
@@ -228,15 +267,18 @@ object ItcMapping extends Encoders {
         val BigDecimalType         = schema.ref("BigDecimal")
         val LongType               = schema.ref("Long")
         val DurationType           = schema.ref("Duration")
-
-        val typeMappings =
+        val typeMappings           =
           List(
             ObjectMapping(
               tpe = QueryType,
               fieldMappings = List(
                 ComputeRoot[SpectroscopyResults]("basiccase",
                                                  SpectroscopyResultType,
-                                                 computeItc[F](itc)
+                                                 basicCase[F](itc)
+                ),
+                ComputeRoot[SpectroscopyResults]("spectroscopy",
+                                                 SpectroscopyResultType,
+                                                 spectroscopy[F](itc)
                 )
               )
             ),
@@ -245,177 +287,233 @@ object ItcMapping extends Encoders {
             LeafMapping[FiniteDuration](DurationType)
           )
 
+        def wavelengthPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                               IorNec[Problem, Environment]
+        ] = {
+          case (i, ("wavelength", ObjectValue(units)))
+              if units.filter(_._2 != Value.AbsentValue).length != 1 =>
+            val presentUnits =
+              units.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
+            i.addProblem(s"Wavelength defined with multiple units $presentUnits")
+          case (i, ("wavelength", ObjectValue(units))) =>
+            val wavelength: Option[Wavelength] = parseWavelength(units)
+            wavelength
+              .map(w => cursorEnvAdd("wavelength", w)(i))
+              .getOrElse(i.addProblem("Wavelength couldn't be parsed"))
+        }
+
+        def resolutionPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                               IorNec[Problem, Environment]
+        ] = {
+          // resolution
+          case (i, ("resolution", IntValue(r))) if r > 0 =>
+            cursorEnvAdd("resolution", Rational(r))(i)
+          case (i, ("resolution", v))                    =>
+            i.addProblem(s"Not valid resolution value $v")
+        }
+
+        def simultaneousCoveragePartial
+          : PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                            IorNec[Problem, Environment]
+          ] = {
+          // simultaneousCoverage
+          case (i, ("simultaneousCoverage", ObjectValue(units)))
+              if units.filter(_._2 != Value.AbsentValue).length != 1 =>
+            val presentUnits =
+              units.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
+            i.addProblem(
+              s"Simultaneous coverage defined with multiple units $presentUnits"
+            )
+          case (i, ("simultaneousCoverage", ObjectValue(units))) =>
+            val wavelength: Option[Wavelength] = parseWavelength(units)
+            wavelength
+              .map(w => cursorEnvAdd("simultaneousCoverage", w)(i))
+              .getOrElse(i.addProblem("Simultaneous coverage couldn't be parsed"))
+        }
+
+        def redshiftPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                             IorNec[Problem, Environment]
+        ] = {
+          // redshift
+          case (i, ("redshift", FloatValue(r))) =>
+            val rs = Redshift(r)
+            i.map(e => e.copy(env = e.env.add(("redshift", rs))))
+          case (i, ("redshift", IntValue(r)))   =>
+            val rs = Redshift(r)
+            i.map(e => e.copy(env = e.env.add(("redshift", rs))))
+          case (i, ("redshift", v))             =>
+            i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
+        }
+
+        def signalToNoisePartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                                  IorNec[Problem, Environment]
+        ] = {
+          // signalToNoise
+          case (i, ("signalToNoise", IntValue(r))) if r > 0 =>
+            refineV[Positive](r)
+              .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
+          case (i, ("signalToNoise", v))                    =>
+            i.addProblem(s"Not valid signalToNoise value $v")
+        }
+
+        def spatialProfilePartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                                   IorNec[Problem, Environment]
+        ] = {
+          // spatialProfile
+          case (i, ("spatialProfile", ObjectValue(v))) if v.length === 1 || v.length === 2 =>
+            (v match {
+              case ("sourceType", TypedEnumValue(EnumValue("POINT_SOURCE", _, _, _))) :: ("fwhm",
+                                                                                          AbsentValue
+                  ) :: Nil =>
+                SpatialProfile.PointSource.some
+              case ("sourceType", TypedEnumValue(EnumValue("UNIFORM_SOURCE", _, _, _))) :: ("fwhm",
+                                                                                            AbsentValue
+                  ) :: Nil =>
+                SpatialProfile.UniformSource.some
+              case ("sourceType", TypedEnumValue(EnumValue("GAUSSIAN_SOURCE", _, _, _))) :: ("fwhm",
+                                                                                             ObjectValue(
+                                                                                               fwhm
+                                                                                             )
+                  ) :: Nil if fwhm.filter(_._2 != Value.AbsentValue).length === 1 =>
+                parseFwhw(fwhm).map(SpatialProfile.GaussianSource(_))
+              case _ => none
+            }).map(sp => cursorEnvAdd("spatialProfile", sp)(i))
+              .getOrElse(i.addProblem("Cannot parse spatialProfile"))
+          case (i, ("spatialProfile", _))                                                  =>
+            i.addProblem("Cannot parse spatialProfile")
+        }
+
+        def spectralDistributionPartial
+          : PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                            IorNec[Problem, Environment]
+          ] = {
+          // spectralDistribution
+          case (i, ("spectralDistribution", ObjectValue(sd)))
+              if sd.filter(_._2 != Value.AbsentValue).length === 1 =>
+            sd.filter(_._2 != Value.AbsentValue) match {
+              case ("blackBody", ObjectValue(List(("temperature", IntValue(v))))) :: Nil if v > 0 =>
+                val blackBody = SpectralDistribution.BlackBody(
+                  BigDecimal(v).withRefinedUnit[Positive, Kelvin]
+                )
+                cursorEnvAdd("spectralDistribution", blackBody)(i)
+              case ("blackBody", ObjectValue(List(("temperature", FloatValue(v))))) :: Nil
+                  if v > 0 =>
+                val blackBody = SpectralDistribution.BlackBody(
+                  BigDecimal(v).withRefinedUnit[Positive, Kelvin]
+                )
+                cursorEnvAdd("spectralDistribution", blackBody)(i)
+              case ("powerLaw", ObjectValue(List(("index", IntValue(pl))))) :: Nil if pl > 0      =>
+                val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
+                cursorEnvAdd("spectralDistribution", powerLaw)(i)
+              case ("powerLaw", ObjectValue(List(("index", FloatValue(pl))))) :: Nil if pl > 0    =>
+                val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
+                cursorEnvAdd("spectralDistribution", powerLaw)(i)
+              case ("stellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil                      =>
+                StellarLibrarySpectrum
+                  .fromTag(s.fromScreamingSnakeCase)
+                  .orElse(StellarLibrarySpectrum.fromTag(s))
+                  .map(s =>
+                    cursorEnvAdd("spectralDistribution", SpectralDistribution.Library(s.asLeft))(i)
+                  )
+                  .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
+              case ("nonStellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil                   =>
+                NonStellarLibrarySpectrum
+                  .fromTag(s.fromScreamingSnakeCase)
+                  .orElse(NonStellarLibrarySpectrum.fromTag(s))
+                  .map(s =>
+                    cursorEnvAdd("spectralDistribution", SpectralDistribution.Library(s.asRight))(i)
+                  )
+                  .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
+              case _                                                                              =>
+                i.addProblem("Cannot parse spatialDistribution")
+            }
+          case (i, ("spectralDistribution", ObjectValue(sd))) =>
+            val v =
+              sd.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
+            i.addProblem(s"Spectral distribution value is not valid $v")
+        }
+
+        def magnitudePartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                              IorNec[Problem, Environment]
+        ] = {
+          // magnitude
+          case (i,
+                ("magnitude",
+                 ObjectValue(
+                   List(("band", TypedEnumValue(EnumValue(band, _, _, _))),
+                        ("value", value),
+                        ("error", error),
+                        ("system", sys)
+                   )
+                 )
+                )
+              ) =>
+            val b = MagnitudeBand.fromTag(band.fromScreamingSnakeCase)
+            val v = value match {
+              case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
+              case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
+              case _             => none
+            }
+            val e = error match {
+              case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
+              case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
+              case _             => none
+            }
+            val s = sys match {
+              case TypedEnumValue(EnumValue(s, _, _, _)) =>
+                MagnitudeSystem
+                  .fromTag(s.fromScreamingSnakeCase)
+                  .orElse(MagnitudeSystem.fromTag(s))
+              case UntypedEnumValue(s)                   =>
+                MagnitudeSystem
+                  .fromTag(s.fromScreamingSnakeCase)
+                  .orElse(MagnitudeSystem.fromTag(s))
+              case _                                     => none
+            }
+            (v, b, s)
+              .mapN(Magnitude(_, _, e, _))
+              .map(cursorEnvAdd("magnitude", _)(i))
+              .getOrElse(i.addProblem("Cannot parse magnitude"))
+        }
+
+        def fallback(a: (IorNec[Problem, Environment], (String, Value))) =
+          a._1.addProblem(s"Unexpected param ${a._2._1}")
+
         override val selectElaborator =
           new SelectElaborator(
             Map(
               QueryType -> {
-                case Select("basiccase", List(Binding("input", ObjectValue(wv))), child) =>
+                case Select("spectroscopy", List(Binding("input", ObjectValue(wv))), child) =>
+                  println("HERE")
+                  println(wv)
                   wv.foldLeft(Environment(Cursor.Env(), child).rightIor[NonEmptyChain[Problem]]) {
-                    // wavelength
-                    case (i, ("wavelength", ObjectValue(units)))
-                        if units.filter(_._2 != Value.AbsentValue).length != 1 =>
-                      val presentUnits =
-                        units.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
-                      i.addProblem(s"Wavelength defined with multiple units $presentUnits")
-                    case (i, ("wavelength", ObjectValue(units))) =>
-                      val wavelength: Option[Wavelength] = parseWavelength(units)
-                      wavelength
-                        .map(w => cursorEnvAdd("wavelength", w)(i))
-                        .getOrElse(i.addProblem("Wavelength couldn't be parsed"))
-
-                    // simultaneousCoverage
-                    case (i, ("simultaneousCoverage", ObjectValue(units)))
-                        if units.filter(_._2 != Value.AbsentValue).length != 1 =>
-                      val presentUnits =
-                        units.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
-                      i.addProblem(
-                        s"Simultaneous coverage defined with multiple units $presentUnits"
-                      )
-                    case (i, ("simultaneousCoverage", ObjectValue(units))) =>
-                      val wavelength: Option[Wavelength] = parseWavelength(units)
-                      wavelength
-                        .map(w => cursorEnvAdd("simultaneousCoverage", w)(i))
-                        .getOrElse(i.addProblem("Simultaneous coverage couldn't be parsed"))
-
-                    // resolution
-                    case (i, ("resolution", IntValue(r))) if r > 0 =>
-                      cursorEnvAdd("resolution", Rational(r))(i)
-                    case (i, ("resolution", v))                    =>
-                      i.addProblem(s"Not valid resolution value $v")
-
-                    // signalToNoise
-                    case (i, ("signalToNoise", IntValue(r))) if r > 0 =>
-                      refineV[Positive](r)
-                        .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
-                    case (i, ("signalToNoise", v))                    =>
-                      i.addProblem(s"Not valid signalToNoise value $v")
-
-                    // spatialProfile
-                    case (i, ("spatialProfile", ObjectValue(v)))
-                        if v.length === 1 || v.length === 2 =>
-                      (v match {
-                        case ("sourceType", TypedEnumValue(EnumValue("POINT_SOURCE", _, _, _))) :: ("fwhm",
-                                                                                                    AbsentValue
-                            ) :: Nil =>
-                          SpatialProfile.PointSource.some
-                        case ("sourceType",
-                              TypedEnumValue(EnumValue("UNIFORM_SOURCE", _, _, _))
-                            ) :: ("fwhm", AbsentValue) :: Nil =>
-                          SpatialProfile.UniformSource.some
-                        case ("sourceType",
-                              TypedEnumValue(EnumValue("GAUSSIAN_SOURCE", _, _, _))
-                            ) :: ("fwhm", ObjectValue(fwhm)) :: Nil
-                            if fwhm.filter(_._2 != Value.AbsentValue).length === 1 =>
-                          parseFwhw(fwhm).map(SpatialProfile.GaussianSource(_))
-                        case _ => none
-                      }).map(sp => cursorEnvAdd("spatialProfile", sp)(i))
-                        .getOrElse(i.addProblem("Cannot parse spatialProfile"))
-                    case (i, ("spatialProfile", _)) =>
-                      i.addProblem("Cannot parse spatialProfile")
-
-                    // spectralDistribution
-                    case (i, ("spectralDistribution", ObjectValue(sd)))
-                        if sd.filter(_._2 != Value.AbsentValue).length === 1 =>
-                      sd.filter(_._2 != Value.AbsentValue) match {
-                        case ("blackBody", ObjectValue(List(("temperature", IntValue(v))))) :: Nil
-                            if v > 0 =>
-                          val blackBody = SpectralDistribution.BlackBody(
-                            BigDecimal(v).withRefinedUnit[Positive, Kelvin]
-                          )
-                          cursorEnvAdd("spectralDistribution", blackBody)(i)
-                        case ("blackBody", ObjectValue(List(("temperature", FloatValue(v))))) :: Nil
-                            if v > 0 =>
-                          val blackBody = SpectralDistribution.BlackBody(
-                            BigDecimal(v).withRefinedUnit[Positive, Kelvin]
-                          )
-                          cursorEnvAdd("spectralDistribution", blackBody)(i)
-                        case ("powerLaw", ObjectValue(List(("index", IntValue(pl))))) :: Nil
-                            if pl > 0 =>
-                          val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
-                          cursorEnvAdd("spectralDistribution", powerLaw)(i)
-                        case ("powerLaw", ObjectValue(List(("index", FloatValue(pl))))) :: Nil
-                            if pl > 0 =>
-                          val powerLaw = SpectralDistribution.PowerLaw(BigDecimal(pl))
-                          cursorEnvAdd("spectralDistribution", powerLaw)(i)
-                        case ("stellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil    =>
-                          StellarLibrarySpectrum
-                            .fromTag(s.fromScreamingSnakeCase)
-                            .orElse(StellarLibrarySpectrum.fromTag(s))
-                            .map(s =>
-                              cursorEnvAdd("spectralDistribution",
-                                           SpectralDistribution.Library(s.asLeft)
-                              )(i)
-                            )
-                            .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
-                        case ("nonStellar", TypedEnumValue(EnumValue(s, _, _, _))) :: Nil =>
-                          NonStellarLibrarySpectrum
-                            .fromTag(s.fromScreamingSnakeCase)
-                            .orElse(NonStellarLibrarySpectrum.fromTag(s))
-                            .map(s =>
-                              cursorEnvAdd("spectralDistribution",
-                                           SpectralDistribution.Library(s.asRight)
-                              )(i)
-                            )
-                            .getOrElse(i.addProblem(s"Unknow stellar library value $s"))
-                        case _                                                            =>
-                          i.addProblem("Cannot parse spatialDistribution")
-                      }
-                    case (i, ("spectralDistribution", ObjectValue(sd))) =>
-                      val v =
-                        sd.filter(_._2 != Value.AbsentValue).map(_._1).mkString("{", ", ", "}")
-                      i.addProblem(s"Spectral distribution value is not valid $v")
-
-                    // magnitude
-                    case (i,
-                          ("magnitude",
-                           ObjectValue(
-                             List(("band", TypedEnumValue(EnumValue(band, _, _, _))),
-                                  ("value", value),
-                                  ("error", error),
-                                  ("system", sys)
-                             )
-                           )
-                          )
-                        ) =>
-                      val b = MagnitudeBand.fromTag(band.fromScreamingSnakeCase)
-                      val v = value match {
-                        case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
-                        case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
-                        case _             => none
-                      }
-                      val e = error match {
-                        case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
-                        case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
-                        case _             => none
-                      }
-                      val s = sys match {
-                        case TypedEnumValue(EnumValue(s, _, _, _)) =>
-                          MagnitudeSystem
-                            .fromTag(s.fromScreamingSnakeCase)
-                            .orElse(MagnitudeSystem.fromTag(s))
-                        case UntypedEnumValue(s)                   =>
-                          MagnitudeSystem
-                            .fromTag(s.fromScreamingSnakeCase)
-                            .orElse(MagnitudeSystem.fromTag(s))
-                        case _                                     => none
-                      }
-                      (v, b, s)
-                        .mapN(Magnitude(_, _, e, _))
-                        .map(cursorEnvAdd("magnitude", _)(i))
-                        .getOrElse(i.addProblem("Cannot parse magnitude"))
-
-                    // redshift
-                    case (i, ("redshift", FloatValue(r))) =>
-                      val rs = Redshift(r)
-                      i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-                    case (i, ("redshift", IntValue(r)))   =>
-                      val rs = Redshift(r)
-                      i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-                    case (i, ("redshift", v))             =>
-                      i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
-
-                    // Unknown param
-                    case (e, (p, _)) => e.addProblem(s"Unexpected param $p")
+                    case (e, c) =>
+                      wavelengthPartial
+                        .orElse(redshiftPartial)
+                        .orElse(signalToNoisePartial)
+                        .orElse(spatialProfilePartial)
+                        .orElse(spectralDistributionPartial)
+                        .orElse(magnitudePartial)
+                        .applyOrElse(
+                          (e, c),
+                          fallback
+                        )
+                  }.map(e => e.copy(child = Select("spectroscopy", Nil, child)))
+                case Select("basiccase", List(Binding("input", ObjectValue(wv))), child)    =>
+                  wv.foldLeft(Environment(Cursor.Env(), child).rightIor[NonEmptyChain[Problem]]) {
+                    case (e, c) =>
+                      wavelengthPartial
+                        .orElse(simultaneousCoveragePartial)
+                        .orElse(resolutionPartial)
+                        .orElse(signalToNoisePartial)
+                        .orElse(spatialProfilePartial)
+                        .orElse(spectralDistributionPartial)
+                        .orElse(redshiftPartial)
+                        .orElse(magnitudePartial)
+                        .applyOrElse(
+                          (e, c),
+                          fallback
+                        )
 
                   }.map(e => e.copy(child = Select("basiccase", Nil, child)))
               }
