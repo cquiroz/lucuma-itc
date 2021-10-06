@@ -69,46 +69,18 @@ object Main extends IOApp {
       .withHttpApp(app)
       .resource
 
-  // def stream[F[_]: Async](
-  //   mapping:    Mapping[F],
-  //   cfg:        Config,
-  //   entryPoint: EntryPoint[F]
-  // ): Stream[F, Nothing] = {
-  //   val itcService = ItcService.service[F](mapping)
-  //
-  //   def app: HttpApp[F] =
-  //     Http4sLogger.httpApp(logHeaders = true, logBody = false)(
-  //       (
-  //         // Routes for static resources, ie. GraphQL Playground
-  //         resourceServiceBuilder[F]("/assets").toRoutes <+>
-  //
-  //           // Routes for the ITC GraphQL service
-  //           entryPoint.liftT(
-  //             NatchezMiddleware.server {
-  //               ItcService.routes(itcService)
-  //             }
-  //           )
-  //       ).orNotFound
-  //     )
-  //
-  //   // Spin up the server ...
-  //   for {
-  //     exitCode <- BlazeServerBuilder[F](global)
-  //                   .bindHttp(cfg.port, "0.0.0.0")
-  //                   .withHttpApp(app)
-  //                   .serve
-  //   } yield exitCode
-  // }.drain
+  def routes[F[_]: Async: natchez.Trace](cfg: Config): Resource[F, HttpRoutes[F]] =
+    for {
+      itc <- ItcImpl.forUri(cfg.itcUrl)
+      map <- Resource.eval(ItcMapping(itc))
+      its <- Resource.pure(ItcService.service(map))
+    } yield
 
-  def routes[F[_]: Async: natchez.Trace](service: ItcService[F]): Resource[F, HttpRoutes[F]] =
-    ???
-  // Routes for static resources, ie. GraphQL Playground
-  // resourceServiceBuilder[F]("/assets").toRoutes <+>
-  //   // Routes for the ITC GraphQL service
-  //   ItcService.routes(service)
+    // Routes for static resources, ie. GraphQL Playground
+    resourceServiceBuilder[F]("/assets").toRoutes <+>
+      // Routes for the ITC GraphQL service
+      ItcService.routes(its)
 
-  // def traced[F[_]: Async](ep: EntryPoint[F], itcService: ItcService[F]) =
-  //   ep.liftT(NatchezMiddleware.server(routes(itcService)))
 
   /**
    * Our main server, as a resource that starts up our server on acquire and shuts it all down in
@@ -116,13 +88,10 @@ object Main extends IOApp {
    */
   def server[F[_]: Async: Logger](cfg: Config): Resource[F, ExitCode] =
     for {
-      _   <- Resource.eval(banner)
-      ep  <- entryPointResource(cfg.honeycomb)
-      itc <- ItcImpl.forUri(cfg.itcUrl)
-      map <- Resource.eval(ItcMapping(itc))
-      its <- Resource.pure(ItcService.service(map))
-      ap  <- ep.liftR(routes(its))
-      s   <- serverResource(ap, cfg)
+      _  <- Resource.eval(banner)
+      ep <- entryPointResource(cfg.honeycomb)
+      ap <- ep.liftR(routes(cfg))
+      s  <- serverResource(ap, cfg)
     } yield s
 
   def run(args: List[String]): IO[ExitCode] =
