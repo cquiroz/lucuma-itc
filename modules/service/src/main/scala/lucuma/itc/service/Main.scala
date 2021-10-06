@@ -91,8 +91,8 @@ object Main extends IOApp {
       _  <- Resource.eval(banner)
       ep <- entryPointResource(cfg.honeycomb)
       ap <- ep.liftR(routes(cfg))
-      s  <- serverResource(ap, cfg)
-    } yield s
+      _  <- serverResource(ap.orNotFound, cfg)
+    } yield ExitCode.Success
 
   def run(args: List[String]): IO[ExitCode] =
     for {
