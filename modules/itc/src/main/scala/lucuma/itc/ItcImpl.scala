@@ -13,6 +13,8 @@ import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.TargetProfile
 import lucuma.itc.syntax.finiteduration._
 import lucuma.itc.syntax.instrument._
+import natchez.Trace
+import natchez.http4s.NatchezMiddleware
 import org.http4s._
 import org.http4s.asynchttpclient.client.AsyncHttpClient
 import org.http4s.circe._
@@ -29,17 +31,18 @@ object ItcImpl {
 
   private val MaxPercentSaturation = 50.0
 
-  def forHeroku[F[_]: Async]: Resource[F, Itc[F]] =
+  def forHeroku[F[_]: Async: Trace]: Resource[F, Itc[F]] =
     forUri(uri"https://gemini-itc.herokuapp.com/json")
 
-  def forUri[F[_]: Async](uri: Uri): Resource[F, Itc[F]] =
+  def forUri[F[_]: Async: Trace](uri: Uri): Resource[F, Itc[F]] =
     AsyncHttpClient
-      .resource[F](AsyncHttpClient.configure(_.setRequestTimeout(30000)))
+      .resource(AsyncHttpClient.configure(_.setRequestTimeout(30000)))
+      .map(NatchezMiddleware.client[F])
       .map(RequestLogger(true, true))
       .map(ResponseLogger(true, true))
       .map(forClientAndUri[F](_, uri))
 
-  def forClientAndUri[F[_]: Concurrent](c: Client[F], uri: Uri): Itc[F] =
+  def forClientAndUri[F[_]: Concurrent: Trace](c: Client[F], uri: Uri): Itc[F] =
     new Itc[F] with Http4sClientDsl[F] {
 
       def calculate(
@@ -65,11 +68,12 @@ object ItcImpl {
         // at some point but this is ok for now.
 
         // Convenience method to compute an OCS2 ITC result for the specified profile/mode.
-        def itc(exposureDuration: FiniteDuration, exposures: Int): F[ItcResult] = {
-          val json =
-            spectroscopyParams(targetProfile, observingMode, exposureDuration, exposures).asJson
-          c.expect(POST(json, uri))(jsonOf[F, ItcResult])
-        }
+        def itc(exposureDuration: FiniteDuration, exposures: Int): F[ItcResult] =
+          Trace[F].span("itc-query") {
+            val json =
+              spectroscopyParams(targetProfile, observingMode, exposureDuration, exposures).asJson
+            c.expect(POST(json, uri))(jsonOf[F, ItcResult])
+          }
 
         // Pull our exposure limits out of the observing mode since we'll need them soon.
         // N.B. we can't just import these because they're added to `Instrument` with syntax.
@@ -83,64 +87,67 @@ object ItcImpl {
         // accept this limitation for now. Note that conditions are totally guesswork so this may
         // end up being good enough. Unclear.
 
-        itc(1.second, 1).flatMap { baseline =>
-          // First thing we need to check is the saturation for a minimum-length exposure. If it's
-          // greater than our limit we simply can't observe in this mode because the source is
-          // too bright.
-
-          if (
-            baseline.maxPercentFullWell * minExposureDuration.toDoubleSeconds > MaxPercentSaturation
-          ) {
-
-            (Itc.Result.SourceTooBright("too bright"): Itc.Result).pure[F]
-
-          } else {
-
-            // Ok so we know that it's possible to observe this thing. Let's scale to get an ideal
-            // single exposure time. If it's within instrument limits and doesn't saturate
-            // the detector then we can do the whole thing in a single exposure.
-
-            val singleExposureDuration: FiniteDuration =
-              (signalToNoise * signalToNoise / (baseline.maxTotalSNRatio * baseline.maxTotalSNRatio)).seconds
-                .secondsCeilIf(integralDurations)
-
-            val singleExposureSaturation: Double =
-              baseline.maxPercentFullWell * singleExposureDuration.toDoubleSeconds
+        Trace[F].span("itc") {
+          itc(1.second, 1).flatMap { baseline =>
+            // First thing we need to check is the saturation for a minimum-length exposure. If it's
+            // greater than our limit we simply can't observe in this mode because the source is
+            // too bright.
 
             if (
-              singleExposureDuration >= minExposureDuration &&
-              singleExposureDuration <= maxExposureDuration &&
-              singleExposureSaturation <= MaxPercentSaturation
+              baseline.maxPercentFullWell * minExposureDuration.toDoubleSeconds > MaxPercentSaturation
             ) {
 
-              // We can do this in one exposure, but we need to hit ITC again to get an accurate
-              // signal-to-noise value.
-              itc(singleExposureDuration, 1).map { r =>
-                Itc.Result.Success(singleExposureDuration, 1, r.maxTotalSNRatio.toInt)
-              }
+              (Itc.Result.SourceTooBright("too bright"): Itc.Result).pure[F]
 
             } else {
 
-              // For multiple exposures we compute the time it would take to fill the well to 50%,
-              // then clip to instrument limits and round up to the nearest second if necessary.
+              // Ok so we know that it's possible to observe this thing. Let's scale to get an ideal
+              // single exposure time. If it's within instrument limits and doesn't saturate
+              // the detector then we can do the whole thing in a single exposure.
 
-              val multipleExposureSecs: FiniteDuration =
-                (MaxPercentSaturation / baseline.maxPercentFullWell).seconds
-                  .min(maxExposureDuration)
-                  .max(minExposureDuration)
+              val singleExposureDuration: FiniteDuration =
+                (signalToNoise * signalToNoise / (baseline.maxTotalSNRatio * baseline.maxTotalSNRatio)).seconds
                   .secondsCeilIf(integralDurations)
 
-              // We can't compute S/N accurately enough to extrapolate the number of exposures we
-              // need so we must ask ITC to do it.
-              itc(multipleExposureSecs, 1).flatMap { r =>
-                // Now estimate the number of exposures. It may be low due to read noise but we
-                // don't really have a way to compensate yet.
-                val n =
-                  ((signalToNoise * signalToNoise) / (r.maxTotalSNRatio * r.maxTotalSNRatio)).ceil.toInt
+              val singleExposureSaturation: Double =
+                baseline.maxPercentFullWell * singleExposureDuration.toDoubleSeconds
 
-                // But in any case we can calculate our final answer, which may come in low.
-                itc(multipleExposureSecs, n).map { r2 =>
-                  Itc.Result.Success(multipleExposureSecs, n, r2.maxTotalSNRatio.toInt)
+              if (
+                singleExposureDuration >= minExposureDuration &&
+                singleExposureDuration <= maxExposureDuration &&
+                singleExposureSaturation <= MaxPercentSaturation
+              ) {
+
+                // We can do this in one exposure, but we need to hit ITC again to get an accurate
+                // signal-to-noise value.
+                itc(singleExposureDuration, 1).map { r =>
+                  Itc.Result.Success(singleExposureDuration, 1, r.maxTotalSNRatio.toInt)
+                }
+
+              } else {
+
+                // For multiple exposures we compute the time it would take to fill the well to 50%,
+                // then clip to instrument limits and round up to the nearest second if necessary.
+
+                val multipleExposureSecs: FiniteDuration =
+                  (MaxPercentSaturation / baseline.maxPercentFullWell).seconds
+                    .min(maxExposureDuration)
+                    .max(minExposureDuration)
+                    .secondsCeilIf(integralDurations)
+
+                // We can't compute S/N accurately enough to extrapolate the number of exposures we
+                // need so we must ask ITC to do it.
+                itc(multipleExposureSecs, 1).flatMap { r =>
+                  // Now estimate the number of exposures. It may be low due to read noise but we
+                  // don't really have a way to compensate yet.
+                  val n =
+                    ((signalToNoise * signalToNoise) / (r.maxTotalSNRatio * r.maxTotalSNRatio)).ceil.toInt
+
+                  // But in any case we can calculate our final answer, which may come in low.
+                  itc(multipleExposureSecs, n).map { r2 =>
+                    Itc.Result.Success(multipleExposureSecs, n, r2.maxTotalSNRatio.toInt)
+                  }
+
                 }
 
               }
@@ -148,7 +155,6 @@ object ItcImpl {
             }
 
           }
-
         }
 
       }
