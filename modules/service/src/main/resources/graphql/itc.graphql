@@ -154,7 +154,7 @@ type ObservingModeSpectroscopy {
 scalar PosInt
 
 type Query {
-  spectroscopy(
+  basiccase(
     # Configuraton alternatives search parameters.
     input: QueryConfigurationAlternativeSearchInput!
   ): spectroscopyResult!

@@ -60,7 +60,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               nanometers: 60,
               picometers: 300
@@ -107,7 +107,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               picometers: 300
             },
@@ -154,7 +154,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               picometers: 300,
               nanometers: 200
@@ -202,7 +202,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               nanometers: 60,
             },
@@ -248,7 +248,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
       json"""
         {
           "data": {
-            "spectroscopy": {
+            "basiccase": {
               "results": [
                 {
                   "mode": {
@@ -275,7 +275,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               nanometers: 60,
             },
@@ -331,7 +331,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
     query(
       """
         query {
-          spectroscopy(input: {
+          basiccase(input: {
             wavelength: {
               nanometers: 60,
             },
@@ -375,7 +375,7 @@ class GraphQLSuite extends munit.CatsEffectSuite {
         """,
       json"""{
         "data": {
-          "spectroscopy": {
+          "basiccase": {
             "results": [
               {
                 "mode": {
