@@ -20,6 +20,7 @@ import eu.timepit.refined.numeric.Positive
 import io.circe.Encoder
 import io.circe.Json
 import lucuma.core.enum.GmosNorthDisperser
+import lucuma.core.enum.GmosNorthFilter
 import lucuma.core.enum.GmosNorthFpu
 import lucuma.core.enum.MagnitudeBand
 import lucuma.core.enum.MagnitudeSystem
@@ -50,9 +51,6 @@ import scala.util.Using
 import Query._
 import Value._
 import QueryCompiler._
-import lucuma.core.enum.GmosNorthFilter
-
-final case class SpectroscopyMultiResults(results: List[SpectroscopyResults])
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -104,10 +102,14 @@ trait Encoders {
     )
   }
 
+  implicit val encoderGmosNITCParams: Encoder[GmosNITCParams] =
+    deriveEncoder[GmosNITCParams]
+
   implicit val encoderGmosNorth: Encoder[GmosNorth]                      = new Encoder[GmosNorth] {
     final def apply(a: GmosNorth): Json = Json.obj(
-      ("instrument", Json.fromString(a.instrument.toString)),
+      ("instrument", Json.fromString(a.instrument.longName.toUpperCase.replace(" ", "_"))),
       ("resolution", Json.fromInt(a.resolution.toInt)),
+      ("params", GmosNITCParams(a.disperser, a.fpu, a.filter).asJson),
       ("wavelength", a.λ.asJson)
     )
   }
@@ -125,8 +127,6 @@ trait Encoders {
   implicit val encoderSpectroscopyResults: Encoder[SpectroscopyResults] =
     deriveEncoder[SpectroscopyResults]
 
-  implicit val encoderSpectroscopyMultiResults: Encoder[SpectroscopyMultiResults] =
-    deriveEncoder[SpectroscopyMultiResults]
 }
 
 final case class GmosNITCParams(
@@ -187,7 +187,7 @@ object ItcMapping extends Encoders {
 
   def spectroscopy[F[_]: ApplicativeError[*[_], Throwable]](
     itc: Itc[F]
-  )(env: Cursor.Env): F[Result[SpectroscopyMultiResults]] = {
+  )(env: Cursor.Env): F[Result[List[SpectroscopyResults]]] = {
     println(env)
     println(env.get[Wavelength]("wavelength"))
     println(env.get[Redshift]("redshift"))
@@ -224,7 +224,7 @@ object ItcMapping extends Encoders {
               )
             )
         }
-        .map(u => SpectroscopyMultiResults(u).rightIor[NonEmptyChain[Problem]])
+        .map(u => u.rightIor[NonEmptyChain[Problem]])
     }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
   }
 
@@ -266,14 +266,13 @@ object ItcMapping extends Encoders {
     loadSchema[F].map { loadedSchema =>
       new CirceMapping[F] with ComputeMapping[F] {
 
-        val schema: Schema          = loadedSchema
-        val QueryType               = schema.ref("Query")
-        val SpectroscopyResultType  = schema.ref("SpectroscopyResult")
-        val SpectroscopyResultsType = schema.ref("SpectroscopyResults")
-        val BigDecimalType          = schema.ref("BigDecimal")
-        val LongType                = schema.ref("Long")
-        val DurationType            = schema.ref("Duration")
-        val typeMappings            =
+        val schema: Schema         = loadedSchema
+        val QueryType              = schema.ref("Query")
+        val SpectroscopyResultType = schema.ref("SpectroscopyResult")
+        val BigDecimalType         = schema.ref("BigDecimal")
+        val LongType               = schema.ref("Long")
+        val DurationType           = schema.ref("Duration")
+        val typeMappings           =
           List(
             ObjectMapping(
               tpe = QueryType,
@@ -282,9 +281,9 @@ object ItcMapping extends Encoders {
                                                  SpectroscopyResultType,
                                                  basicCase[F](itc)
                 ),
-                ComputeRoot[SpectroscopyMultiResults]("spectroscopy",
-                                                      SpectroscopyResultsType,
-                                                      spectroscopy[F](itc)
+                ComputeRoot[List[SpectroscopyResults]]("spectroscopy",
+                                                       ListType(SpectroscopyResultType),
+                                                       spectroscopy[F](itc)
                 )
               )
             ),

@@ -1,17 +1,17 @@
 {
   "conditions" : {
-    "wv" : "Dry",
-    "sb" : "Dark",
+    "wv" : "PERCENT_50",
+    "sb" : "PERCENT_80",
     "airmass" : 2.2686797594164386E-257,
-    "cc" : "PointOne",
-    "iq" : "PointEight"
+    "cc" : "PERCENT_70",
+    "iq" : "PERCENT_85"
   },
   "source" : {
-    "normBand" : {
-      "V": {}
-    },
+    "normBand" : "V",
     "distribution" : {
-        "A0V" : {}
+      "Library" : {
+        "LibraryStar" : "A0V"
+      }
     },
     "profile" : {
       "PointSource" : {
@@ -19,7 +19,9 @@
       }
     },
     "norm" : 500.0,
-    "units" : "Vega",
+    "units" : {
+      "MagnitudeSystem" : "Vega"
+    },
     "redshift" : {
       "z" : 0.0
     }
@@ -31,27 +33,39 @@
   },
   "observation" : {
     "calculationMethod" : {
+      "S2NMethod" : {
         "SpectroscopyS2N" : {
           "sourceFraction" : 0.5,
           "exposureTime" : 1.0,
           "coadds" : null,
           "offset" : 0.0,
           "exposures" : 10
+        }
       }
     },
     "analysisMethod" : {
-      "skyAperture" : 1.0
+      "ApertureMethod" : {
+        "AutoAperture" : {
+          "skyAperture" : 1.0
+        }
+      }
     }
   },
   "instrument" : {
     "GmosParameters" : {
       "spectralBinning" : 1,
-      "centralWavelength" : 600.0,
+      "centralWavelength" : "600.0 nm",
       "site" : "GN",
       "ccdType" : "HAMAMATSU",
-      "filter" : "Z",
-      "grating" : "R831_G5302",
-      "fpMask" : "NS5",
+      "filter" : {
+        "FilterNorth" : "g_G0301"
+      },
+      "grating" : {
+        "DisperserNorth" : "R831_G5302"
+      },
+      "fpMask" : {
+        "FPUnitNorth" : "LONGSLIT_4"
+      },
       "ampReadMode" : "FAST",
       "builtinROI" : "FULL_FRAME",
       "spatialBinning" : 1,

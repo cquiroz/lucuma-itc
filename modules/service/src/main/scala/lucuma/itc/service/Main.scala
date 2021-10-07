@@ -23,8 +23,6 @@ import org.http4s.server.staticcontent._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.concurrent.ExecutionContext.global
-
 // #server
 object Main extends IOApp {
   val ServiceName = "lucuma-itc"
@@ -61,7 +59,7 @@ object Main extends IOApp {
 
   def serverResource[F[_]: Async](app: HttpApp[F], cfg: Config): Resource[F, Server] =
     // Spin up the server ...
-    BlazeServerBuilder[F](global)
+    BlazeServerBuilder[F]
       .bindHttp(cfg.port, "0.0.0.0")
       .withHttpApp(app)
       .resource

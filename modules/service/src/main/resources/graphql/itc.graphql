@@ -498,10 +498,10 @@ type Query {
   spectroscopy(
     # Query multiple modes in spectroscopy mode
     input: SpectroscopyModeInput!
-  ): SpectroscopyResults!
+  ): [SpectroscopyResult!]!
 }
 
-input GmosSITCParams {
+type GmosSITCParams {
   # Gmos North disperser
   disperser: GmosNorthDisperser!
 
@@ -511,7 +511,32 @@ input GmosSITCParams {
   # Gmos North filter
   filter: GmosNorthFilter
 }
-input GmosNITCParams {
+
+input GmosSITCInput {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  fpu: GmosNorthFpu
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+type GmosNITCParams {
+  # Gmos North disperser
+  disperser: GmosNorthDisperser!
+
+  # Gmos North Focal plane unit
+  customMask: GmosCustomMask
+
+  fpu: GmosNorthFpu
+
+  # Gmos North filter
+  filter: GmosNorthFilter
+}
+
+input GmosNITCInput {
   # Gmos North disperser
   disperser: GmosNorthDisperser!
 
@@ -529,7 +554,7 @@ union InstrumentITCParams = GmosNITCParams | GmosSITCParams
 # Parent of instrument modes
 input InstrumentModes {
   # params
-  gmosN: GmosNITCParams
+  gmosN: GmosNITCInput
 }
 
 # Configuration alternatives query
@@ -732,15 +757,6 @@ input SpectralDistributionInput {
 type SpectroscopyResult {
   # Search results
   results: [Result!]!
-}
-
-type ModeResults {
-  results: [Result!]!
-}
-
-type SpectroscopyResults {
-  # Search results
-  results: [ModeResults!]!
 }
 
 # The `BigDecimal` scalar type represents signed fractional values with arbitrary precision.
