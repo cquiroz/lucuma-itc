@@ -81,7 +81,7 @@ trait Encoders {
       Json.obj(("resultType", Json.fromString("Success"))).deepMerge(f.asJson)
     case Itc.Result.SourceTooBright(m) =>
       Json.obj(("resultType", Json.fromString("Error")),
-               ("message", Json.fromString(s"Source too bright $m"))
+               ("msg", Json.fromString(s"Source too bright $m"))
       )
   }
 
