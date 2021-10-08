@@ -6,6 +6,7 @@ package lucuma.itc.service
 import cats.effect._
 import io.circe.Json
 import lucuma.itc.Itc
+import lucuma.itc.ItcObservingConditions
 import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.TargetProfile
 import natchez.Trace.Implicits.noop
@@ -14,7 +15,6 @@ import org.http4s.circe._
 import org.http4s.syntax.all._
 
 import scala.concurrent.duration._
-import lucuma.itc.ItcObservingConditions
 
 trait GraphQLSuite extends munit.CatsEffectSuite {
   val itc = new Itc[IO] {

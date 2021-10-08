@@ -19,6 +19,8 @@ import eu.timepit.refined._
 import eu.timepit.refined.numeric.Positive
 import io.circe.Encoder
 import io.circe.Json
+import lucuma.core.enum.SkyBackground
+import lucuma.core.enum.WaterVapor
 import lucuma.core.enum._
 import lucuma.core.math.Angle
 import lucuma.core.math.MagnitudeValue
@@ -28,14 +30,16 @@ import lucuma.core.model.Magnitude
 import lucuma.core.model.SpatialProfile
 import lucuma.core.model.SpectralDistribution
 import lucuma.core.syntax.string._
+import lucuma.core.util.Enumerated
 import lucuma.itc.Itc
+import lucuma.itc.ItcObservingConditions
 import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
 import lucuma.itc.search.Result.Spectroscopy
 import lucuma.itc.search.SpectroscopyResults
 import lucuma.itc.search.TargetProfile
-import lucuma.itc.service.syntax.all._
 import lucuma.itc.search.syntax.conditions._
+import lucuma.itc.service.syntax.all._
 import spire.math.Rational
 
 import java.math.RoundingMode
@@ -47,10 +51,6 @@ import scala.util.Using
 import Query._
 import Value._
 import QueryCompiler._
-import lucuma.core.enum.SkyBackground
-import lucuma.core.util.Enumerated
-import lucuma.core.enum.WaterVapor
-import lucuma.itc.ItcObservingConditions
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -198,7 +198,7 @@ object ItcMapping extends Encoders {
 
   def spectroscopy[F[_]: ApplicativeError[*[_], Throwable]](
     itc: Itc[F]
-  )(env: Cursor.Env): F[Result[List[SpectroscopyResults]]] = {
+  )(env: Cursor.Env): F[Result[List[SpectroscopyResults]]] =
     (env.get[Wavelength]("wavelength"),
      env.get[Redshift]("redshift"),
      env.get[types.numeric.PosInt]("signalToNoise"),
@@ -237,7 +237,6 @@ object ItcMapping extends Encoders {
           Problem(s"Error calculating itc $x").leftIorNec
         }
     }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
-  }
 
   def parseFwhw(units: List[(String, Value)]): Option[Angle] =
     units.find(_._2 != Value.AbsentValue) match {
