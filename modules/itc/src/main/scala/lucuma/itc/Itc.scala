@@ -37,6 +37,8 @@ object Itc {
     /** Object is too bright to be observed in the specified mode. */
     final case class SourceTooBright(msg: String) extends Result
 
+    /** Generic calculation error */
+    final case class CalculationError(msg: String) extends Result
   }
 
 }

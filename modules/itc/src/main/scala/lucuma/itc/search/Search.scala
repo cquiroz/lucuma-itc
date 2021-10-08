@@ -63,8 +63,9 @@ object Search {
         Itc[F].calculate(targetProfile, mode, signalToNoise.value).map(Result.Spectroscopy(mode, _))
       }
       .map(_.sortBy {
-        case Result.Spectroscopy(_, Itc.Result.Success(t, n, _))   => t.toSeconds.toDouble * n
-        case Result.Spectroscopy(_, Itc.Result.SourceTooBright(_)) => Double.MaxValue
+        case Result.Spectroscopy(_, Itc.Result.Success(t, n, _))    => t.toSeconds.toDouble * n
+        case Result.Spectroscopy(_, Itc.Result.SourceTooBright(_))  => Double.MaxValue
+        case Result.Spectroscopy(_, Itc.Result.CalculationError(_)) => Double.MaxValue
       })
       .map(SpectroscopyResults(_))
     resp

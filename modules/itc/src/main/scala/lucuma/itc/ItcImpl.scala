@@ -183,10 +183,10 @@ object ItcImpl {
         )
       ),
       conditions = ItcObservingConditions(
-        iq = ImageQuality.PointEight,   // Orginially 0.85
-        cc = CloudExtinction.PointFive, // Originally 0.7
-        wv = WaterVapor.Dry,            // Orginally Any
-        sb = SkyBackground.Bright,      // Originally 0.5
+        iq = ImageQuality.OnePointZero,    // Orginially 0.85
+        cc = CloudExtinction.OnePointZero, // Originally 0.7
+        wv = WaterVapor.Wet,               // Orginally Any
+        sb = SkyBackground.Dark,           // Originally 0.5
         airmass = 1.5
       ),
       telescope = ItcTelescopeDetails(

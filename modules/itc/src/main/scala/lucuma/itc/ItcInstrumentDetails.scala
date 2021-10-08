@@ -7,6 +7,7 @@ import io.circe.Encoder
 import io.circe.Json
 import lucuma.core.math.Wavelength
 import lucuma.itc.search.ObservingMode
+import lucuma.itc.search.syntax.all._
 
 final case class ItcInstrumentDetails(mode: ObservingMode)
 
@@ -24,12 +25,12 @@ object ItcInstrumentDetails {
             s"${Wavelength.decimalNanometers.reverseGet(a.λ)} nm"
           ),
           "filter"            -> Json.obj(
-            "FilterNorth" -> a.filter.fold[Json](Json.fromString("NONE"))(_ =>
-              Json.fromString("NONE")
+            "FilterNorth" -> a.filter.fold[Json](Json.fromString("NONE"))(r =>
+              Json.fromString(r.ocs2Tag)
             )
           ),
-          "grating"           -> Json.obj("DisperserNorth" -> Json.fromString("R831_G5302")),
-          "fpMask"            -> Json.obj("FPUnitNorth" -> Json.fromString("LONGSLIT_4")),
+          "grating"           -> Json.obj("DisperserNorth" -> Json.fromString(a.disperser.ocs2Tag)),
+          "fpMask"            -> Json.obj("FPUnitNorth" -> Json.fromString(a.fpu.ocs2Tag)),
           // Remaining fields are defaulted for now.
           "spectralBinning"   -> Json.fromInt(1),
           "site"              -> Json.fromString("GN"),

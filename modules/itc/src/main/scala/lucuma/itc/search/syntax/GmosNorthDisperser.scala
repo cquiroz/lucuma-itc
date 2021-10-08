@@ -90,6 +90,19 @@ final class GmosNorthDisperserOps(val self: GmosNorthDisperser) extends AnyVal {
       case R150_G5308  => 193
     }
 
+  // pedantic: tags are the same in OCS2 and OCS3 but this is just a coincidence
+  def ocs2Tag: String =
+    self match {
+      case B1200_G5301 => "B1200_G5301"
+      case R831_G5302  => "R831_G5302"
+      case B480_G5309  => "B480_G5309"
+      case B600_G5303  => "B600_G5303"
+      case B600_G5307  => "B600_G5307"
+      case R600_G5304  => "R600_G5304"
+      case R400_G5305  => "R400_G5305"
+      case R150_G5306  => "R150_G5306"
+      case R150_G5308  => "R150_G5308"
+    }
 }
 
 trait ToGmosNorthDisperserOps {

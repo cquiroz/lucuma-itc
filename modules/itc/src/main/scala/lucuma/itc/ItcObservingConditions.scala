@@ -5,6 +5,7 @@ package lucuma.itc
 
 import io.circe.Encoder
 import lucuma.core.enum._
+import lucuma.itc.search.syntax.all._
 
 final case class ItcObservingConditions(
   iq:      ImageQuality,
@@ -18,7 +19,7 @@ object ItcObservingConditions {
 
   implicit val encoder: Encoder[ItcObservingConditions] =
     Encoder.forProduct5("iq", "cc", "wv", "sb", "airmass") { a =>
-      ("PERCENT_85", "PERCENT_70", "PERCENT_50", "PERCENT_80", a.airmass)
+      (a.iq.ocs2Tag, a.cc.ocs2Tag, a.wv.ocs2Tag, a.sb.ocs2Tag, a.airmass)
     }
 
 }

@@ -77,9 +77,13 @@ trait Encoders {
     deriveEncoder[Itc.Result.Success]
 
   implicit val encoderItcResult: Encoder[Itc.Result] = Encoder.instance {
-    case f: Itc.Result.Success         =>
+    case f: Itc.Result.Success          =>
       Json.obj(("resultType", Json.fromString("Success"))).deepMerge(f.asJson)
-    case Itc.Result.SourceTooBright(m) =>
+    case Itc.Result.CalculationError(m) =>
+      Json.obj(("resultType", Json.fromString("Error")),
+               ("msg", Json.fromString(s"Calculation error $m"))
+      )
+    case Itc.Result.SourceTooBright(m)  =>
       Json.obj(("resultType", Json.fromString("Error")),
                ("msg", Json.fromString(s"Source too bright $m"))
       )
@@ -213,6 +217,9 @@ object ItcMapping extends Encoders {
                 .GmosNorth(wv, mode.disperser, mode.fpu, mode.filter),
               sn.value
             )
+            .handleError { case x =>
+              Itc.Result.CalculationError(s"Error calculating itc $x")
+            }
             .map(r =>
               SpectroscopyResults(
                 List(
@@ -224,7 +231,10 @@ object ItcMapping extends Encoders {
               )
             )
         }
-        .map(u => u.rightIor[NonEmptyChain[Problem]])
+        .map(_.rightIor[NonEmptyChain[Problem]])
+        .handleError { case x =>
+          Problem(s"Error calculating itc $x").leftIorNec
+        }
     }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
   }
 
