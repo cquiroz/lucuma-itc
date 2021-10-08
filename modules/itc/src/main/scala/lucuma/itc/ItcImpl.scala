@@ -6,7 +6,6 @@ package lucuma.itc
 import cats.effect._
 import cats.implicits._
 import io.circe.syntax._
-import lucuma.core.enum._
 import lucuma.core.math.Angle
 import lucuma.itc.Itc
 import lucuma.itc.search.ObservingMode
@@ -48,17 +47,19 @@ object ItcImpl {
       def calculate(
         targetProfile: TargetProfile,
         observingMode: ObservingMode,
+        constraints:   ItcObservingConditions,
         signalToNoise: Int
       ): F[Itc.Result] =
         observingMode match {
           case _: ObservingMode.Spectroscopy =>
-            spectroscopy(targetProfile, observingMode, signalToNoise)
+            spectroscopy(targetProfile, observingMode, constraints, signalToNoise)
           // TODO: imaging
         }
 
       def spectroscopy(
         targetProfile: TargetProfile,
         observingMode: ObservingMode,
+        constraints:   ItcObservingConditions,
         signalToNoise: Int
       ): F[Itc.Result] = {
 
@@ -71,7 +72,12 @@ object ItcImpl {
         def itc(exposureDuration: FiniteDuration, exposures: Int): F[ItcResult] =
           Trace[F].span("itc-query") {
             val json =
-              spectroscopyParams(targetProfile, observingMode, exposureDuration, exposures).asJson
+              spectroscopyParams(targetProfile,
+                                 observingMode,
+                                 exposureDuration,
+                                 constraints,
+                                 exposures
+              ).asJson
             c.expect(POST(json, uri))(jsonOf[F, ItcResult])
           }
 
@@ -166,6 +172,7 @@ object ItcImpl {
     targetProfile:    TargetProfile,
     observingMode:    ObservingMode,
     exposureDuration: FiniteDuration,
+    conditions:       ItcObservingConditions,
     exposures:        Int
   ): ItcParameters =
     ItcParameters(
@@ -182,13 +189,7 @@ object ItcImpl {
           skyAperture = 5.0
         )
       ),
-      conditions = ItcObservingConditions(
-        iq = ImageQuality.OnePointZero,    // Orginially 0.85
-        cc = CloudExtinction.OnePointZero, // Originally 0.7
-        wv = WaterVapor.Wet,               // Orginally Any
-        sb = SkyBackground.Dark,           // Originally 0.5
-        airmass = 1.5
-      ),
+      conditions = conditions,
       telescope = ItcTelescopeDetails(
         wfs = ItcWavefrontSensor.OIWFS
       ),

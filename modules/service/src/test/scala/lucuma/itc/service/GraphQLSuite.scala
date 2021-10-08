@@ -14,12 +14,14 @@ import org.http4s.circe._
 import org.http4s.syntax.all._
 
 import scala.concurrent.duration._
+import lucuma.itc.ItcObservingConditions
 
 trait GraphQLSuite extends munit.CatsEffectSuite {
   val itc = new Itc[IO] {
     def calculate(
       targetProfile: TargetProfile,
       observingMode: ObservingMode,
+      constraints:   ItcObservingConditions,
       signalToNoise: Int
     ): IO[Itc.Result] =
       IO.pure(

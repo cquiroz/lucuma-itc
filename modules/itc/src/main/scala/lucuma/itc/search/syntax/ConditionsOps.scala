@@ -3,6 +3,7 @@
 
 package lucuma.itc.search.syntax
 
+import cats.syntax.all._
 import lucuma.core.enum.CloudExtinction
 import lucuma.core.enum.ImageQuality
 import lucuma.core.enum.SkyBackground
@@ -22,6 +23,7 @@ final class ImageQualityOps(val self: ImageQuality) extends AnyVal {
       case ImageQuality.OnePointFive => "ANY"
       case ImageQuality.TwoPointZero => "ANY"
     }
+
 }
 
 trait ToImageQualityOps {
@@ -84,6 +86,31 @@ trait ToConditionsOps
     extends ToImageQualityOps
     with ToCloudExtinctionOps
     with ToWaterVaporOps
-    with ToSkyBackgroundOps
+    with ToSkyBackgroundOps {
+
+  def iqFromTag(s: String): Option[ImageQuality] = s match {
+    case "POINT_ONE"      => ImageQuality.PointOne.some
+    case "POINT_TWO"      => ImageQuality.PointTwo.some
+    case "POINT_THREE"    => ImageQuality.PointThree.some
+    case "POINT_FOUR"     => ImageQuality.PointFour.some
+    case "POINT_SIX"      => ImageQuality.PointSix.some
+    case "POINT_EIGHT"    => ImageQuality.PointEight.some
+    case "ONE_POINT_ZERO" => ImageQuality.OnePointZero.some
+    case "ONE_POINT_FIVE" => ImageQuality.OnePointFive.some
+    case "TWO_POINT_ZERO" => ImageQuality.TwoPointZero.some
+    case _                => none
+  }
+
+  def ceFromTag(s: String): Option[CloudExtinction] = s match {
+    case "POINT_ONE"        => CloudExtinction.PointOne.some
+    case "POINT_THREE"      => CloudExtinction.PointThree.some
+    case "POINT_FIVE"       => CloudExtinction.PointFive.some
+    case "ONE_POINT_ZERO"   => CloudExtinction.OnePointZero.some
+    case "ONE_POINT_FIVE"   => CloudExtinction.OnePointFive.some
+    case "TWO_POINT_ZERO"   => CloudExtinction.TwoPointZero.some
+    case "THREE_POINT_ZERO" => CloudExtinction.ThreePointZero.some
+    case _                  => none
+  }
+}
 
 object conditions extends ToConditionsOps

@@ -432,6 +432,121 @@ enum GmosNorthFilter {
   U_PRIME
 }
 
+type ConstraintSet {
+  # Image quality
+  imageQuality: ImageQuality!
+
+  # Cloud extinction
+  cloudExtinction: CloudExtinction!
+
+  # Sky background
+  skyBackground: SkyBackground!
+
+  # Water vapor
+  waterVapor: WaterVapor!
+
+  # Either airmass range or elevation range
+  # elevationRange: ElevationRange!
+
+  # Airmass range if elevation range is an Airmass range
+  # airmassRange: AirMassRange
+
+  # Hour angle range if elevation range is an Hour angle range
+  # hourAngleRange: HourAngleRange
+}
+
+# Image quality
+enum ImageQuality {
+  # ImageQuality PointOne
+  POINT_ONE
+
+  # ImageQuality PointTwo
+  POINT_TWO
+
+  # ImageQuality PointThree
+  POINT_THREE
+
+  # ImageQuality PointFour
+  POINT_FOUR
+
+  # ImageQuality PointSix
+  POINT_SIX
+
+  # ImageQuality PointEight
+  POINT_EIGHT
+
+  # ImageQuality OnePointZero
+  ONE_POINT_ZERO
+
+  # ImageQuality OnePointFive
+  ONE_POINT_FIVE
+
+  # ImageQuality TwoPointZero
+  TWO_POINT_ZERO
+}
+
+# Cloud extinction
+enum CloudExtinction {
+  # CloudExtinction PointOne
+  POINT_ONE
+
+  # CloudExtinction PointThree
+  POINT_THREE
+
+  # CloudExtinction PointFive
+  POINT_FIVE
+
+  # CloudExtinction OnePointZero
+  ONE_POINT_ZERO
+
+  # CloudExtinction OnePointFive
+  ONE_POINT_FIVE
+
+  # CloudExtinction TwoPointZero
+  TWO_POINT_ZERO
+
+  # CloudExtinction ThreePointZero
+  THREE_POINT_ZERO
+}
+
+enum SkyBackground {
+  # SkyBackground Darkest
+  DARKEST
+
+  # SkyBackground Dark
+  DARK
+
+  # SkyBackground Gray
+  GRAY
+
+  # SkyBackground Bright
+  BRIGHT
+}
+
+# Water vapor
+enum WaterVapor {
+  # WaterVapor VeryDry
+  VERY_DRY
+
+  # WaterVapor Dry
+  DRY
+
+  # WaterVapor Median
+  MEDIAN
+
+  # WaterVapor Wet
+  WET
+}
+
+# Constraint set creation parameters
+input CreateConstraintSetInput {
+  imageQuality: ImageQuality!
+  cloudExtinction: CloudExtinction!
+  skyBackground: SkyBackground!
+  waterVapor: WaterVapor!
+  #elevationRange: CreateElevationRangeInput!
+}
+
 ##############
 # ITC schema
 ##############
@@ -576,6 +691,9 @@ input SpectroscopyModeInput {
 
   # Target redshift.
   redshift: BigDecimal!
+
+  # Conditions
+  constraints: CreateConstraintSetInput!
 
   # Instrument modes
   modes: [InstrumentModes]!

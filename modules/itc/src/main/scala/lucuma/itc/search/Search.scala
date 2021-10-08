@@ -9,6 +9,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.enum._
 import lucuma.itc.Itc
 import lucuma.itc.search.gmosnorth.GmosNorthFilterSelector
+import lucuma.itc.ItcObservingConditions
 
 sealed trait Result {
   def mode: ObservingMode
@@ -24,9 +25,10 @@ final case class SpectroscopyResults(results: List[Result.Spectroscopy])
 object Search {
 
   def spectroscopy[F[_]: Parallel: Monad: Itc](
-    constraints:   Constraints.Spectroscopy,
-    targetProfile: TargetProfile,
-    signalToNoise: PosInt
+    constraints:    Constraints.Spectroscopy,
+    targetProfile:  TargetProfile,
+    itcConstraints: ItcObservingConditions,
+    signalToNoise:  PosInt
   ): F[SpectroscopyResults] = {
 
     // As a first pass we'll generate every possible configuration and then filter them at the end.
@@ -60,7 +62,9 @@ object Search {
     // Done!
     val resp = compatibleModes
       .parTraverse { mode =>
-        Itc[F].calculate(targetProfile, mode, signalToNoise.value).map(Result.Spectroscopy(mode, _))
+        Itc[F]
+          .calculate(targetProfile, mode, itcConstraints, signalToNoise.value)
+          .map(Result.Spectroscopy(mode, _))
       }
       .map(_.sortBy {
         case Result.Spectroscopy(_, Itc.Result.Success(t, n, _))    => t.toSeconds.toDouble * n

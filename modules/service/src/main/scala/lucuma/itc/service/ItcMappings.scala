@@ -19,13 +19,7 @@ import eu.timepit.refined._
 import eu.timepit.refined.numeric.Positive
 import io.circe.Encoder
 import io.circe.Json
-import lucuma.core.enum.GmosNorthDisperser
-import lucuma.core.enum.GmosNorthFilter
-import lucuma.core.enum.GmosNorthFpu
-import lucuma.core.enum.MagnitudeBand
-import lucuma.core.enum.MagnitudeSystem
-import lucuma.core.enum.NonStellarLibrarySpectrum
-import lucuma.core.enum.StellarLibrarySpectrum
+import lucuma.core.enum._
 import lucuma.core.math.Angle
 import lucuma.core.math.MagnitudeValue
 import lucuma.core.math.Redshift
@@ -33,6 +27,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.Magnitude
 import lucuma.core.model.SpatialProfile
 import lucuma.core.model.SpectralDistribution
+import lucuma.core.syntax.string._
 import lucuma.itc.Itc
 import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.ObservingMode.Spectroscopy.GmosNorth
@@ -40,6 +35,7 @@ import lucuma.itc.search.Result.Spectroscopy
 import lucuma.itc.search.SpectroscopyResults
 import lucuma.itc.search.TargetProfile
 import lucuma.itc.service.syntax.all._
+import lucuma.itc.search.syntax.conditions._
 import spire.math.Rational
 
 import java.math.RoundingMode
@@ -51,6 +47,10 @@ import scala.util.Using
 import Query._
 import Value._
 import QueryCompiler._
+import lucuma.core.enum.SkyBackground
+import lucuma.core.util.Enumerated
+import lucuma.core.enum.WaterVapor
+import lucuma.itc.ItcObservingConditions
 
 trait Encoders {
   import io.circe.generic.semiauto._
@@ -168,6 +168,13 @@ object ItcMapping extends Encoders {
           TargetProfile(sp, sd, m, rs),
           ObservingMode.Spectroscopy
             .GmosNorth(wv, GmosNorthDisperser.B480_G5309, GmosNorthFpu.Ifu2Slits, none),
+          ItcObservingConditions(
+            iq = ImageQuality.OnePointZero,    // Orginially 0.85
+            cc = CloudExtinction.OnePointZero, // Originally 0.7
+            wv = WaterVapor.Wet,               // Orginally Any
+            sb = SkyBackground.Dark,           // Originally 0.5
+            airmass = 1.5
+          ),
           sn.value
         )
         .map(r =>
@@ -200,14 +207,16 @@ object ItcMapping extends Encoders {
     println(env.get[SpectralDistribution]("spectralDistribution"))
     println(env.get[Magnitude]("magnitude"))
     println(env.get[List[GmosNITCParams]]("modes"))
+    println(env.get[ItcObservingConditions]("constraints"))
     (env.get[Wavelength]("wavelength"),
      env.get[Redshift]("redshift"),
      env.get[types.numeric.PosInt]("signalToNoise"),
      env.get[SpatialProfile]("spatialProfile"),
      env.get[SpectralDistribution]("spectralDistribution"),
      env.get[Magnitude]("magnitude"),
-     env.get[List[GmosNITCParams]]("modes")
-    ).traverseN { (wv, rs, sn, sp, sd, m, modes) =>
+     env.get[List[GmosNITCParams]]("modes"),
+     env.get[ItcObservingConditions]("constraints")
+    ).traverseN { (wv, rs, sn, sp, sd, m, modes, c) =>
       modes
         .traverse { mode =>
           itc
@@ -215,6 +224,7 @@ object ItcMapping extends Encoders {
               TargetProfile(sp, sd, m, rs),
               ObservingMode.Spectroscopy
                 .GmosNorth(wv, mode.disperser, mode.fpu, mode.filter),
+              c,
               sn.value
             )
             .handleError { case x =>
@@ -528,6 +538,31 @@ object ItcMapping extends Encoders {
           cursorEnvAdd("modes", modes)(i)
         }
 
+        def constraintsPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
+                                                IorNec[Problem, Environment]
+        ] = {
+          case (i,
+                ("constraints",
+                 ObjectValue(
+                   List(("imageQuality", TypedEnumValue(EnumValue(iq, _, _, _))),
+                        ("cloudExtinction", TypedEnumValue(EnumValue(ce, _, _, _))),
+                        ("skyBackground", TypedEnumValue(EnumValue(sb, _, _, _))),
+                        ("waterVapor", TypedEnumValue(EnumValue(wv, _, _, _)))
+                   )
+                 )
+                )
+              ) =>
+            (iqFromTag(iq.fromScreamingSnakeCase)
+               .orElse(iqFromTag(iq)),
+             ceFromTag(ce.fromScreamingSnakeCase)
+               .orElse(ceFromTag(ce)),
+             (Enumerated[WaterVapor].all.find(_.label.toScreamingSnakeCase === wv)),
+             Enumerated[SkyBackground].all.find(_.label.equalsIgnoreCase(sb))
+            ).mapN((iq, ce, wv, sb) =>
+              cursorEnvAdd("constraints", ItcObservingConditions(iq, ce, wv, sb, 1))(i)
+            ).getOrElse(i.addProblem("Cannot parse constraints"))
+        }
+
         def fallback(a: (IorNec[Problem, Environment], (String, Value))) =
           a._1.addProblem(s"Unexpected param ${a._2._1}")
 
@@ -545,6 +580,7 @@ object ItcMapping extends Encoders {
                         .orElse(spectralDistributionPartial)
                         .orElse(magnitudePartial)
                         .orElse(instrumentModesPartial)
+                        .orElse(constraintsPartial)
                         .applyOrElse(
                           (e, c),
                           fallback

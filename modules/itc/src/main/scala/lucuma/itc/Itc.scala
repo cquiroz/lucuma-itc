@@ -16,6 +16,7 @@ trait Itc[F[_]] {
   def calculate(
     targetProfile: TargetProfile,
     observingMode: ObservingMode,
+    constraints: ItcObservingConditions,
     signalToNoise: Int
   ): F[Itc.Result]
 

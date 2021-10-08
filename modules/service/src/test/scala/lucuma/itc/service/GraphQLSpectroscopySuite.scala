@@ -31,6 +31,12 @@ class GraphQLSpectroscopySuite extends GraphQLSuite {
               error: 1.2,
               system: JY
             },
+            constraints: {
+              imageQuality: POINT_THREE,
+              cloudExtinction: POINT_FIVE,
+              skyBackground: DARK,
+              waterVapor: DRY
+            },
             modes: [{
               gmosN: {
                 filter: G_PRIME,
