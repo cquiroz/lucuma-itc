@@ -199,15 +199,6 @@ object ItcMapping extends Encoders {
   def spectroscopy[F[_]: ApplicativeError[*[_], Throwable]](
     itc: Itc[F]
   )(env: Cursor.Env): F[Result[List[SpectroscopyResults]]] = {
-    println(env)
-    println(env.get[Wavelength]("wavelength"))
-    println(env.get[Redshift]("redshift"))
-    println(env.get[types.numeric.PosInt]("signalToNoise"))
-    println(env.get[SpatialProfile]("spatialProfile"))
-    println(env.get[SpectralDistribution]("spectralDistribution"))
-    println(env.get[Magnitude]("magnitude"))
-    println(env.get[List[GmosNITCParams]]("modes"))
-    println(env.get[ItcObservingConditions]("constraints"))
     (env.get[Wavelength]("wavelength"),
      env.get[Redshift]("redshift"),
      env.get[types.numeric.PosInt]("signalToNoise"),
@@ -538,6 +529,12 @@ object ItcMapping extends Encoders {
           cursorEnvAdd("modes", modes)(i)
         }
 
+        def bigDecimalValue(v: Value): Option[BigDecimal] = v match {
+          case IntValue(r)   => BigDecimal(r).some
+          case FloatValue(r) => BigDecimal(r).some
+          case _             => none
+        }
+
         def constraintsPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
                                                 IorNec[Problem, Environment]
         ] = {
@@ -547,19 +544,29 @@ object ItcMapping extends Encoders {
                    List(("imageQuality", TypedEnumValue(EnumValue(iq, _, _, _))),
                         ("cloudExtinction", TypedEnumValue(EnumValue(ce, _, _, _))),
                         ("skyBackground", TypedEnumValue(EnumValue(sb, _, _, _))),
-                        ("waterVapor", TypedEnumValue(EnumValue(wv, _, _, _)))
+                        ("waterVapor", TypedEnumValue(EnumValue(wv, _, _, _))),
+                        ("elevationRange",
+                         ObjectValue(
+                           List(("airmassRange", ObjectValue(List(("min", min), ("max", max)))))
+                         )
+                        )
                    )
                  )
                 )
               ) =>
+            val am = (bigDecimalValue(min), bigDecimalValue(max)).mapN { (min, max) =>
+              if (max > min && min >= 1 && max >= 1) max.some else none
+            }.flatten
+
             (iqFromTag(iq.fromScreamingSnakeCase)
                .orElse(iqFromTag(iq)),
              ceFromTag(ce.fromScreamingSnakeCase)
                .orElse(ceFromTag(ce)),
              (Enumerated[WaterVapor].all.find(_.label.toScreamingSnakeCase === wv)),
-             Enumerated[SkyBackground].all.find(_.label.equalsIgnoreCase(sb))
-            ).mapN((iq, ce, wv, sb) =>
-              cursorEnvAdd("constraints", ItcObservingConditions(iq, ce, wv, sb, 1))(i)
+             Enumerated[SkyBackground].all.find(_.label.equalsIgnoreCase(sb)),
+             am
+            ).mapN((iq, ce, wv, sb, am) =>
+              cursorEnvAdd("constraints", ItcObservingConditions(iq, ce, wv, sb, am.toDouble))(i)
             ).getOrElse(i.addProblem("Cannot parse constraints"))
         }
 

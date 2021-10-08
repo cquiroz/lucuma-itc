@@ -16,10 +16,12 @@ final case class ItcObservingConditions(
 )
 
 object ItcObservingConditions {
+  def toItcAirmass(m: Double): Double =
+    if (m <= 1.35) 1.2 else if (m <= 1.75) 1.5 else 2.0
 
   implicit val encoder: Encoder[ItcObservingConditions] =
     Encoder.forProduct5("iq", "cc", "wv", "sb", "airmass") { a =>
-      (a.iq.ocs2Tag, a.cc.ocs2Tag, a.wv.ocs2Tag, a.sb.ocs2Tag, a.airmass)
+      (a.iq.ocs2Tag, a.cc.ocs2Tag, a.wv.ocs2Tag, a.sb.ocs2Tag, toItcAirmass(a.airmass))
     }
 
 }

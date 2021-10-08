@@ -35,7 +35,13 @@ class GraphQLSpectroscopySuite extends GraphQLSuite {
               imageQuality: POINT_THREE,
               cloudExtinction: POINT_FIVE,
               skyBackground: DARK,
-              waterVapor: DRY
+              waterVapor: DRY,
+              elevationRange: {
+                airmassRange: {
+                  min: 1,
+                  max: 2
+                }
+              }
             },
             modes: [{
               gmosN: {

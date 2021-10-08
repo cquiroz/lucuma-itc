@@ -538,13 +538,28 @@ enum WaterVapor {
   WET
 }
 
+###########
+# Based on lucuma-odb schema
+##########,
+# Airmass range creation parameters
+input AirmassRangeInput {
+  min: BigDecimal!
+  max: BigDecimal!
+}
+
+# Elevation range creation parameters
+input ElevationRangeInput {
+  airmassRange: AirmassRangeInput
+  # hourAngleRange: CreateHourAngleRangeInput
+}
+
 # Constraint set creation parameters
-input CreateConstraintSetInput {
+input ConstraintsSetInput {
   imageQuality: ImageQuality!
   cloudExtinction: CloudExtinction!
   skyBackground: SkyBackground!
   waterVapor: WaterVapor!
-  #elevationRange: CreateElevationRangeInput!
+  elevationRange: ElevationRangeInput!
 }
 
 ##############
@@ -693,7 +708,7 @@ input SpectroscopyModeInput {
   redshift: BigDecimal!
 
   # Conditions
-  constraints: CreateConstraintSetInput!
+  constraints: ConstraintsSetInput!
 
   # Instrument modes
   modes: [InstrumentModes]!
