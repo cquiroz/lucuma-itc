@@ -7,7 +7,7 @@ This is a version of the `basic-case` repo running with grackle
 ## TODO
  
 - [ ] Use values rather than buckets for cloud extinction and image quality
-- [ ] Support CORS
+- [ ] Restrict CORS in production
 - [ ] Require auth
 
 ## Long term

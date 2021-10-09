@@ -7,6 +7,7 @@ import cats.Applicative
 import cats.effect._
 import cats.syntax.all._
 import lucuma.itc.ItcImpl
+import lucuma.itc.service.config.Environment._
 import lucuma.itc.service.config._
 import natchez.EntryPoint
 import natchez.honeycomb.Honeycomb
@@ -18,6 +19,8 @@ import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Server
+import org.http4s.server.middleware.CORS
+import org.http4s.server.middleware.CORSPolicy
 import org.http4s.server.middleware.{ Logger => Http4sLogger }
 import org.http4s.server.staticcontent._
 import org.typelevel.log4cats.Logger
@@ -39,6 +42,16 @@ object Main extends IOApp {
             |""".stripMargin
     banner.linesIterator.toList.traverse_(Logger[F].info(_))
   }
+
+  /** A middleware that adds CORS headers. In production the origin must match the cookie domain. */
+  def cors(env: Environment, domain: Option[String]): CORSPolicy =
+    env match {
+      case Local | Review | Staging =>
+        CORS.policy
+      case Production               =>
+        CORS.policy
+          .withAllowOriginHostCi(domain.contains)
+    }
 
   /**
    * A resource that yields a Natchez tracing entry point, either a Honeycomb endpoint if `config`
@@ -75,7 +88,7 @@ object Main extends IOApp {
 
     resourceServiceBuilder[F]("/assets").toRoutes <+>
       // Routes for the ITC GraphQL service
-      NatchezMiddleware.server(ItcService.routes(its))
+      NatchezMiddleware.server(cors(cfg.environment, none)(ItcService.routes(its)))
 
   /**
    * Our main server, as a resource that starts up our server on acquire and shuts it all down in

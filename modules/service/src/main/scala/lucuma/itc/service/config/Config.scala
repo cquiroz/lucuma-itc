@@ -10,7 +10,12 @@ import org.http4s.Uri
 /**
  * Application configuration.
  */
-final case class Config(port: Int, itcUrl: Uri, honeycomb: Option[HoneycombConfig])
+final case class Config(
+  environment: Environment,
+  port:        Int,
+  itcUrl:      Uri,
+  honeycomb:   Option[HoneycombConfig]
+)
 
 object Config {
 
@@ -20,7 +25,10 @@ object Config {
     }
 
   def config: ConfigValue[Effect, Config] =
-    (envOrProp("ITC_PORT")
+    (envOrProp("LUCUMA_SSO_ENVIRONMENT")
+       .as[Environment]
+       .default(Environment.Local),
+     envOrProp("ITC_PORT")
        .or(envOrProp("PORT"))
        .or(ConfigValue.default("8080"))
        .as[Int],
