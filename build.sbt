@@ -21,6 +21,7 @@ val natcchezHttp4sVersion       = "0.2.0"
 val natchezVersion              = "0.1.5"
 val munitVersion                = "0.7.29"
 val disciplineMunitVersion      = "1.0.9"
+val gatlingVersion              = "3.6.1"
 
 inThisBuild(
   Seq(
@@ -104,3 +105,13 @@ lazy val service = project
     )
   )
   .enablePlugins(JavaAppPackaging)
+
+lazy val benchmark = project
+  .in(file("modules/benchmarks"))
+  .enablePlugins(GatlingPlugin)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.gatling.highcharts" % "gatling-charts-highcharts" % gatlingVersion % Test,
+      "io.gatling"            % "gatling-test-framework"    % gatlingVersion % Test
+    )
+  )
