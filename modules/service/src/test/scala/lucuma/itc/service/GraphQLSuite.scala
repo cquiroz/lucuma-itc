@@ -5,6 +5,7 @@ package lucuma.itc.service
 
 import cats.effect._
 import io.circe.Json
+import io.circe.parser._
 import lucuma.itc.Itc
 import lucuma.itc.ItcObservingConditions
 import lucuma.itc.search.ObservingMode
@@ -44,6 +45,21 @@ trait GraphQLSuite extends munit.CatsEffectSuite {
         itc.orNotFound.run(
           Request(method = Method.POST, uri = uri"/itc")
             .withEntity(Json.obj("query" -> Json.fromString(query)))
+        )
+      }
+      .flatMap(_.as[Json])
+      .assertEquals(expected)
+
+  def query(query: String, variables: String, expected: Json): IO[Unit] =
+    IO(itcFixture())
+      .flatMap { itc =>
+        itc.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/itc")
+            .withEntity(
+              Json.obj("query"     -> Json.fromString(query.replace("\\n", "")),
+                       "variables" -> parse(variables).getOrElse(Json.Null)
+              )
+            )
         )
       }
       .flatMap(_.as[Json])

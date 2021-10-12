@@ -238,38 +238,35 @@ object ItcMapping extends Encoders {
         }
     }.map(_.getOrElse((Problem("Missing parameters for spectroscopy")).leftIorNec))
 
+  def bigDecimalValue(v: Value): Option[BigDecimal] = v match {
+    case IntValue(r)    => BigDecimal(r).some
+    case FloatValue(r)  => BigDecimal(r).some
+    case StringValue(r) => Either.catchNonFatal(BigDecimal(r)).toOption
+    case _              => none
+  }
+
   def parseFwhw(units: List[(String, Value)]): Option[Angle] =
     units.find(_._2 != Value.AbsentValue) match {
-      case Some(("microarcseconds", IntValue(n)))   =>
+      case Some(("microarcseconds", IntValue(n))) =>
         Angle.microarcseconds.reverseGet(n.toLong).some
-      case Some(("milliarcseconds", IntValue(n)))   =>
-        Angle.milliarcseconds.reverseGet(n).some
-      case Some(("milliarcseconds", FloatValue(n))) =>
-        Angle.milliarcseconds.reverseGet(n.toInt).some
-      case Some(("arcseconds", IntValue(n)))        =>
-        Angle.arcseconds.reverseGet(n).some
-      case Some(("arcseconds", FloatValue(n)))      =>
-        Angle.arcseconds.reverseGet(n.toInt).some
-      case _                                        => None
+      case Some(("milliarcseconds", n))           =>
+        bigDecimalValue(n).map(n => Angle.milliarcseconds.reverseGet(n.toInt))
+      case Some(("arcseconds", n))                =>
+        bigDecimalValue(n).map(n => Angle.arcseconds.reverseGet(n.toInt))
+      case _                                      => None
     }
 
   def parseWavelength(units: List[(String, Value)]): Option[Wavelength] =
     units.find(_._2 != Value.AbsentValue) match {
-      case Some(("picometers", IntValue(n)))    =>
+      case Some(("picometers", IntValue(n))) =>
         Wavelength.fromPicometers.getOption(n)
-      case Some(("angstroms", IntValue(n)))     =>
-        Wavelength.decimalAngstroms.getOption(BigDecimal(n))
-      case Some(("angstroms", FloatValue(n)))   =>
-        Wavelength.decimalAngstroms.getOption(BigDecimal(n))
-      case Some(("nanometers", IntValue(n)))    =>
-        Wavelength.decimalNanometers.getOption(BigDecimal(n))
-      case Some(("nanometers", FloatValue(n)))  =>
-        Wavelength.decimalNanometers.getOption(BigDecimal(n))
-      case Some(("micrometers", IntValue(n)))   =>
-        Wavelength.decimalMicrometers.getOption(BigDecimal(n))
-      case Some(("micrometers", FloatValue(n))) =>
-        Wavelength.decimalMicrometers.getOption(BigDecimal(n))
-      case _                                    => None
+      case Some(("angstroms", n))            =>
+        bigDecimalValue(n).flatMap(Wavelength.decimalAngstroms.getOption)
+      case Some(("nanometers", n))           =>
+        bigDecimalValue(n).flatMap(Wavelength.decimalNanometers.getOption)
+      case Some(("micrometers", n))          =>
+        bigDecimalValue(n).flatMap(Wavelength.decimalMicrometers.getOption)
+      case _                                 => None
     }
 
   def apply[F[_]: Sync](itc: Itc[F]): F[Mapping[F]] =
@@ -321,10 +318,13 @@ object ItcMapping extends Encoders {
                                                IorNec[Problem, Environment]
         ] = {
           // resolution
-          case (i, ("resolution", IntValue(r))) if r > 0 =>
-            cursorEnvAdd("resolution", Rational(r))(i)
-          case (i, ("resolution", v))                    =>
-            i.addProblem(s"Not valid resolution value $v")
+          case (i, ("resolution", r)) =>
+            bigDecimalValue(r) match {
+              case Some(r) if r > 0 =>
+                cursorEnvAdd("resolution", Rational(r))(i)
+              case _                =>
+                i.addProblem(s"Resolution value not valid $r")
+            }
         }
 
         def simultaneousCoveragePartial
@@ -350,25 +350,30 @@ object ItcMapping extends Encoders {
                                              IorNec[Problem, Environment]
         ] = {
           // redshift
-          case (i, ("redshift", FloatValue(r))) =>
-            val rs = Redshift(r)
-            i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-          case (i, ("redshift", IntValue(r)))   =>
-            val rs = Redshift(r)
-            i.map(e => e.copy(env = e.env.add(("redshift", rs))))
-          case (i, ("redshift", v))             =>
-            i.addLeft(NonEmptyChain.of(Problem(s"Redshift value is not valid $v")))
+          case (i, ("redshift", r)) =>
+            bigDecimalValue(r) match {
+              case Some(r) =>
+                val rs = Redshift(r)
+                cursorEnvAdd("redshift", rs)(i)
+              case _       =>
+                i.addProblem(s"Redshift value is not valid $r")
+            }
         }
 
         def signalToNoisePartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
                                                   IorNec[Problem, Environment]
         ] = {
           // signalToNoise
-          case (i, ("signalToNoise", IntValue(r))) if r > 0 =>
-            refineV[Positive](r)
-              .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
-          case (i, ("signalToNoise", v))                    =>
-            i.addProblem(s"Not valid signalToNoise value $v")
+          case (i, ("signalToNoise", r)) =>
+            bigDecimalValue(r) match {
+              case Some(r) if r > 0 =>
+                refineV[Positive](r.toInt)
+                  .fold(i.addProblem, v => cursorEnvAdd("signalToNoise", v)(i))
+              case Some(r)          =>
+                i.addProblem(s"signalToNoise value $r must be positive")
+              case _                =>
+                i.addProblem(s"Not valid signalToNoise value $r")
+            }
         }
 
         def spatialProfilePartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),
@@ -377,19 +382,15 @@ object ItcMapping extends Encoders {
           // spatialProfile
           case (i, ("spatialProfile", ObjectValue(v))) if v.length === 1 || v.length === 2 =>
             (v match {
-              case ("sourceType", TypedEnumValue(EnumValue("POINT_SOURCE", _, _, _))) :: ("fwhm",
-                                                                                          AbsentValue
-                  ) :: Nil =>
+              case ("sourceType", TypedEnumValue(EnumValue("POINT_SOURCE", _, _, _))) ::
+                  ("fwhm", NullValue | AbsentValue) :: Nil =>
                 SpatialProfile.PointSource.some
-              case ("sourceType", TypedEnumValue(EnumValue("UNIFORM_SOURCE", _, _, _))) :: ("fwhm",
-                                                                                            AbsentValue
-                  ) :: Nil =>
+              case ("sourceType", TypedEnumValue(EnumValue("UNIFORM_SOURCE", _, _, _))) ::
+                  ("fwhm", NullValue | AbsentValue) :: Nil =>
                 SpatialProfile.UniformSource.some
-              case ("sourceType", TypedEnumValue(EnumValue("GAUSSIAN_SOURCE", _, _, _))) :: ("fwhm",
-                                                                                             ObjectValue(
-                                                                                               fwhm
-                                                                                             )
-                  ) :: Nil if fwhm.filter(_._2 != Value.AbsentValue).length === 1 =>
+              case ("sourceType", TypedEnumValue(EnumValue("GAUSSIAN_SOURCE", _, _, _))) ::
+                  ("fwhm", ObjectValue(fwhm)) :: Nil
+                  if fwhm.filter(_._2 != Value.AbsentValue).length === 1 =>
                 parseFwhw(fwhm).map(SpatialProfile.GaussianSource(_))
               case _ => none
             }).map(sp => cursorEnvAdd("spatialProfile", sp)(i))
@@ -464,16 +465,8 @@ object ItcMapping extends Encoders {
                 )
               ) =>
             val b = MagnitudeBand.fromTag(band.fromScreamingSnakeCase)
-            val v = value match {
-              case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
-              case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
-              case _             => none
-            }
-            val e = error match {
-              case IntValue(v)   => MagnitudeValue.fromBigDecimal.getOption(v)
-              case FloatValue(v) => MagnitudeValue.fromBigDecimal.getOption(v)
-              case _             => none
-            }
+            val v = bigDecimalValue(value).flatMap(MagnitudeValue.fromBigDecimal.getOption)
+            val e = bigDecimalValue(error).flatMap(MagnitudeValue.fromBigDecimal.getOption)
             val s = sys match {
               case TypedEnumValue(EnumValue(s, _, _, _)) =>
                 MagnitudeSystem
@@ -498,7 +491,6 @@ object ItcMapping extends Encoders {
             gmosN match {
               case ObjectValue(
                     List(("disperser", TypedEnumValue(EnumValue(d, _, _, _))),
-                         ("customMask", AbsentValue),
                          ("fpu", TypedEnumValue(EnumValue(fpu, _, _, _))),
                          ("filter", TypedEnumValue(EnumValue(f, _, _, _)))
                     )
@@ -526,12 +518,6 @@ object ItcMapping extends Encoders {
             }
           }.flatten
           cursorEnvAdd("modes", modes)(i)
-        }
-
-        def bigDecimalValue(v: Value): Option[BigDecimal] = v match {
-          case IntValue(r)   => BigDecimal(r).some
-          case FloatValue(r) => BigDecimal(r).some
-          case _             => none
         }
 
         def constraintsPartial: PartialFunction[(IorNec[Problem, Environment], (String, Value)),

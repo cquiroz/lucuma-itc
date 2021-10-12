@@ -137,4 +137,88 @@ class GraphQLSpectroscopySuite extends GraphQLSuite {
         """
     )
   }
+
+  test("gmos north case with variables") {
+    query(
+      """
+        query($input: SpectroscopyModeInput) {\n          spectroscopy(input: $input) {\n            results {\n              mode {\n                instrument\n              }\n            }\n          }\n        }\n
+      """,
+      """
+        {
+          "input" : {
+            "wavelength" : {
+              "nanometers" : "600"
+            },
+            "signalToNoise" : "2",
+            "spatialProfile" : {
+              "sourceType" : "POINT_SOURCE",
+              "fwhm" : null
+            },
+            "spectralDistribution" : {
+              "stellar": "A0I"
+            },
+            "magnitude" : {
+              "band" : "I",
+              "value" : "6",
+              "error" : null,
+              "system" : "VEGA"
+            },
+            "redshift" : "0.1",
+            "constraints" : {
+              "imageQuality" : "POINT_EIGHT",
+              "cloudExtinction" : "POINT_FIVE",
+              "skyBackground" : "DARK",
+              "waterVapor" : "DRY",
+              "elevationRange" : {
+                "airmassRange": {
+                  "min": "1",
+                  "max": "2"
+                }
+              }
+            },
+            "modes": [{
+              "gmosN": {
+                "filter": "G_PRIME",
+                "fpu": "LONG_SLIT_0_25",
+                "disperser": "B1200_G5301"
+              }
+            }, {
+              "gmosN": {
+                "filter": "GG455",
+                "fpu": "LONG_SLIT_0_25",
+                "disperser": "B1200_G5301"
+              }
+            }
+            ]
+          }
+        }
+        """,
+      json"""
+        {
+          "data": {
+            "spectroscopy" : [
+              {
+                "results" : [
+                  {
+                    "mode" : {
+                      "instrument" : "GMOS_NORTH"
+                    }
+                  }
+                ]
+              },
+              {
+                "results" : [
+                  {
+                    "mode" : {
+                      "instrument" : "GMOS_NORTH"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+        """
+    )
+  }
 }

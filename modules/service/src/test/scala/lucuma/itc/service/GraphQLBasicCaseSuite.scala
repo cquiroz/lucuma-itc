@@ -73,7 +73,7 @@ class GraphQLBasicCaseSuite extends GraphQLSuite {
             wavelength: {
               picometers: 300
             },
-            redshift: "0.1",
+            redshift: "ddd",
             simultaneousCoverage: {
               picometers: 200
             },
@@ -106,7 +106,7 @@ class GraphQLBasicCaseSuite extends GraphQLSuite {
         """,
       json"""{
         "errors": [
-          {"message": "Redshift value is not valid StringValue(0.1)"}
+          {"message": "Redshift value is not valid StringValue(ddd)"}
         ]
       }"""
     )
@@ -153,8 +153,7 @@ class GraphQLBasicCaseSuite extends GraphQLSuite {
         """,
       json"""{
         "errors": [
-          {"message": "Wavelength defined with multiple units {picometers, nanometers}"},
-          {"message": "Redshift value is not valid StringValue(0.1)"}
+          {"message": "Wavelength defined with multiple units {picometers, nanometers}"}
         ]
       }"""
     )
