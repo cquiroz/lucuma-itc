@@ -32,7 +32,8 @@ trait GraphQLSuite extends munit.CatsEffectSuite {
 
   val service: IO[HttpRoutes[IO]] =
     ItcMapping[IO](itc).map(m => ItcService.routes[IO](ItcService.service[IO](m)))
-  val itcFixture                  = ResourceSuiteLocalFixture(
+
+  val itcFixture = ResourceSuiteLocalFixture(
     "itc",
     Resource.make(service)(_ => IO.unit)
   )

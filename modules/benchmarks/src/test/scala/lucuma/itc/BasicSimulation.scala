@@ -1,28 +1,113 @@
 package lucuma.itc
 
-import scala.concurrent.duration._
-
-import io.gatling.core.Predef._ // 2
+// import scala.concurrent.duration._
+//
+import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import lucuma.itc.service.Main
+import cats.effect.unsafe.implicits.global
+import scala.concurrent.Future
+import io.circe.Json
 
-class BasicSimulation extends Simulation { // 3
+class BasicSimulation extends Simulation {
+  var cancelToken: Option[() => Future[Unit]] = None
+  before {
+    System.setProperty("PORT", "5000")
+    System.setProperty("ITC_URL", "https://gemini-new-itc.herokuapp.com/json")
+    cancelToken = Some(Main.run(Nil).unsafeRunCancelable())
+  }
 
-  val httpProtocol = http // 4
-    .baseUrl("http://computer-database.gatling.io") // 5
-    .acceptHeader("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8") // 6
-    .doNotTrackHeader("1")
-    .acceptLanguageHeader("en-US,en;q=0.5")
-    .acceptEncodingHeader("gzip, deflate")
-    .userAgentHeader("Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0")
+  after {
+    cancelToken.foreach(c => c())
+  }
+  val headers_10   = Map("Content-Type" -> """application/json""")
+  val httpProtocol = http.baseUrl("http://127.0.0.1:5000")
 
-  val scn = scenario("BasicSimulation") // 7
+  val queryStr = """query {
+          spectroscopy(input: {
+            wavelength: {
+              nanometers: 60,
+            },
+            redshift: 0.1,
+            signalToNoise: 2,
+            spatialProfile: {
+              sourceType: POINT_SOURCE
+            },
+            spectralDistribution: {
+              blackBody: {
+                temperature: 50.1
+              }
+            },
+            magnitude: {
+              band: AP,
+              value: 5,
+              error: 1.2,
+              system: JY
+            },
+            constraints: {
+              imageQuality: POINT_THREE,
+              cloudExtinction: POINT_FIVE,
+              skyBackground: DARK,
+              waterVapor: DRY,
+              elevationRange: {
+                airmassRange: {
+                  min: 1,
+                  max: 2
+                }
+              }
+            },
+            modes: [{
+              gmosN: {
+                filter: G_PRIME,
+                fpu: LONG_SLIT_0_25,
+                disperser: B1200_G5301
+              }
+            }, {
+              gmosN: {
+                filter: GG455,
+                fpu: LONG_SLIT_0_25,
+                disperser: B1200_G5301
+              }
+            }
+            ]
+          }) {
+            results {
+                mode {
+                  instrument
+                  resolution
+                  params {
+                    ... on GmosNITCParams {
+                      disperser
+                    }
+                  }
+                  wavelength {
+                    nanometers
+                  }
+                }
+                itc {
+                  ... on ItcSuccess {
+                    exposures
+                    exposureTime {
+                      seconds
+                    }
+                  }
+                }
+            }
+          }
+        }"""
+
+  val body = Json.obj("query" -> Json.fromString(queryStr))
+
+  val scn = scenario("BasicSimulation")
+    .pause(1)
     .exec(
-      http("request_1") // 8
-        .get("/")
-    ) // 9
-    .pause(5) // 10
+      http("request_1")
+        .post("/itc")
+        .headers(headers_10)
+        .body(StringBody(body.noSpaces))
+    )
 
-  setUp( // 11
-    scn.inject(atOnceUsers(1)) // 12
-  ).protocols(httpProtocol) // 13
+  setUp(
+    scn.inject(atOnceUsers(1))
+  ).protocols(httpProtocol)
 }
