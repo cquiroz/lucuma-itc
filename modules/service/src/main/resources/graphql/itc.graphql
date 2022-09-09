@@ -4622,7 +4622,7 @@ type Query {
     input: SpectroscopyModeInput!
   ): [SpectroscopyResult!]!
 
-  spectroscopyGraph(
+  spectroscopyGraphBeta(
     input: SpectroscopyGraphModeInput!
   ): SpectroscopyGraphResult!
 
