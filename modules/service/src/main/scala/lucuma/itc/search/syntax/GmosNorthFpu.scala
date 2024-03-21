@@ -4,7 +4,7 @@
 package lucuma.itc.search.syntax
 
 import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosNorthFpu._
+import lucuma.core.enums.GmosNorthFpu.*
 
 /**
  * Syntax extensions for missing properties. These need to be folded back into the lucuma.core

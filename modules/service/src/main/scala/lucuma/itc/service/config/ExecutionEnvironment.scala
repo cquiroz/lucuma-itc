@@ -3,8 +3,8 @@
 
 package lucuma.itc.service.config
 
-import cats.implicits._
-import ciris._
+import cats.implicits.*
+import ciris.*
 
 enum ExecutionEnvironment:
   case Local, Review, Staging, Production

@@ -12,8 +12,8 @@ import lucuma.core.enums.GmosSouthGrating
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.model.sequence.gmos.arb.ArbGmosCcdMode
 import lucuma.core.util.arb.ArbEnumerated
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.*
+import org.scalacheck.Arbitrary.arbitrary
 
 trait ArbInstrumentMode {
 

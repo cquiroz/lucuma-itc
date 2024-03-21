@@ -27,8 +27,8 @@ import lucuma.itc.ItcObservingConditions
 import lucuma.itc.ItcSeries
 import lucuma.itc.SeriesDataType
 import lucuma.itc.legacy.syntax.all.*
-import lucuma.itc.search.ObservingMode.SpectroscopyMode.*
 import lucuma.itc.search.*
+import lucuma.itc.search.ObservingMode.SpectroscopyMode.*
 import lucuma.itc.syntax.all.given
 
 import java.math.MathContext

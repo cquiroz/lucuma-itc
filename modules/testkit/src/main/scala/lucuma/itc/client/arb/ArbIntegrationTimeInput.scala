@@ -16,8 +16,8 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.arb.ArbConstraintSet
 import lucuma.core.model.arb.ArbSourceProfile
 import lucuma.core.util.arb.ArbEnumerated
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.*
+import org.scalacheck.Arbitrary.arbitrary
 
 trait ArbIntegrationTimeInput {
 

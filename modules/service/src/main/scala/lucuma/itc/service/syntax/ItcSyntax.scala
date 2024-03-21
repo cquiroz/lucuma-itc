@@ -3,7 +3,7 @@
 
 package lucuma.itc.service.syntax
 
-import cats.data._
+import cats.data.*
 import grackle.Problem
 import grackle.Query.Environment
 import lucuma.core.math.SignalToNoise
@@ -16,7 +16,7 @@ import lucuma.itc.SignificantFigures
 import lucuma.itc.SingleSN
 import lucuma.itc.math.roundToSignificantFigures
 import monocle.Focus
-import monocle.std.these._
+import monocle.std.these.*
 
 import scala.annotation.targetName
 

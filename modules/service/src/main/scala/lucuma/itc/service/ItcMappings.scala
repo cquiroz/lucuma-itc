@@ -4,7 +4,7 @@
 package lucuma.itc.service
 
 import buildinfo.BuildInfo
-import cats._
+import cats.*
 import cats.derived.*
 import cats.effect.*
 import cats.syntax.all.*
@@ -12,19 +12,19 @@ import dev.profunktor.redis4cats.algebra.StringCommands
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
-import grackle.QueryCompiler.Elab
 import grackle.*
+import grackle.QueryCompiler.Elab
 import grackle.circe.CirceMapping
 import io.circe.syntax.*
 import lucuma.core.data.Zipper
-import lucuma.core.enums.{ExecutionEnvironment => _, *}
+import lucuma.core.enums.{ExecutionEnvironment as _, *}
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.gmos.GmosFpuMask
 import lucuma.core.util.TimeSpan
+import lucuma.itc.*
 import lucuma.itc.ItcVersions
 import lucuma.itc.SpectroscopyGraphResult
-import lucuma.itc.*
 import lucuma.itc.encoders.given
 import lucuma.itc.input.*
 import lucuma.itc.search.GmosNorthFpuParam

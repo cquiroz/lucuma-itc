@@ -7,8 +7,8 @@ package arb
 import lucuma.core.enums.GmosNorthFpu
 import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.util.arb.ArbEnumerated
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.*
+import org.scalacheck.Arbitrary.arbitrary
 
 trait ArbGmosFpu {
 

@@ -6,8 +6,8 @@ package arb
 
 import lucuma.core.enums.GmosCustomSlitWidth
 import lucuma.core.util.arb.ArbEnumerated
-import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.*
+import org.scalacheck.Arbitrary.arbitrary
 
 trait ArbGmosCustomMask {
 

@@ -5,7 +5,7 @@ package lucuma.itc.search.hashes
 
 import cats.Hash
 import cats.implicits.*
-import eu.timepit.refined._
+import eu.timepit.refined.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.Validate
 import lucuma.core.enums.GmosAmpCount

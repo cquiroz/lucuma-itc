@@ -5,7 +5,7 @@ package lucuma.itc.syntax
 
 import lucuma.core.enums.Instrument
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 trait InstrumentSyntax:
   extension (self: Instrument)

@@ -3,9 +3,9 @@
 
 package lucuma.itc.search.syntax
 
-import cats.implicits._
+import cats.implicits.*
 import lucuma.core.enums.GmosNorthFilter
-import lucuma.core.enums.GmosNorthFilter._
+import lucuma.core.enums.GmosNorthFilter.*
 import lucuma.core.math.Wavelength
 import spire.math.Interval
 

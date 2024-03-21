@@ -392,14 +392,10 @@ object ItcImpl {
         for {
           _ <- L.info(s"Desired S/N $signalToNoise")
           _ <- L.info(s"Target ${targetProfile} at band ${targetProfile.band}")
-          r <- T.span("itc.calctime.spectroscopy-exp-time-at") {
-                 itcWithSNAt(targetProfile,
-                             observingMode,
-                             constraints,
-                             signalToNoise,
-                             signalToNoiseAt
-                 )
-               }
+          r <-
+            T.span("itc.calctime.spectroscopy-exp-time-at") {
+              itcWithSNAt(targetProfile, observingMode, constraints, signalToNoise, signalToNoiseAt)
+            }
           t <- calculationResults(r)
         } yield t
 

@@ -3,12 +3,12 @@
 
 package lucuma.itc.search
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
-import lucuma.itc.syntax.finiteduration._
+import lucuma.itc.syntax.finiteduration.*
 
 import scala.concurrent.duration.FiniteDuration
 

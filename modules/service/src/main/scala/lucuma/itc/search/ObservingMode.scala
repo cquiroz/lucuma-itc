@@ -7,7 +7,7 @@ import cats.Hash
 import cats.derived.*
 import io.circe.*
 import io.circe.syntax.*
-import lucuma.core.enums._
+import lucuma.core.enums.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.gmos.GmosCcdMode

@@ -13,7 +13,7 @@ import dev.profunktor.redis4cats.effects.SetArgs
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class NoOpRedis[F[_]: ApplicativeThrow, K, V] extends StringCommands[F, K, V] {
   override def getEx(key: K, getExArg: GetExArg): F[Option[V]] =

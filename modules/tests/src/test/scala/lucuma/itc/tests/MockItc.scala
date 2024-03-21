@@ -10,6 +10,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.util.TimeSpan
+import lucuma.itc.*
 import lucuma.itc.ChartType
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcCcd
@@ -19,7 +20,6 @@ import lucuma.itc.ItcObservingConditions
 import lucuma.itc.ItcSeries
 import lucuma.itc.SeriesDataType
 import lucuma.itc.SignalToNoiseCalculation
-import lucuma.itc.*
 import lucuma.itc.search.ObservingMode
 import lucuma.itc.search.TargetProfile
 import lucuma.refined.*

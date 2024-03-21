@@ -5,8 +5,8 @@ package lucuma.itc
 
 import cats.effect.unsafe.implicits.global
 import io.circe.Json
-import io.gatling.core.Predef._
-import io.gatling.http.Predef._
+import io.gatling.core.Predef.*
+import io.gatling.http.Predef.*
 import lucuma.itc.service.Main
 
 import scala.concurrent.Future

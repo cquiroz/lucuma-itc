@@ -3,7 +3,7 @@
 
 package lucuma.itc.legacy
 
-import lucuma.core.enums._
+import lucuma.core.enums.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Redshift
 import lucuma.core.math.SignalToNoise

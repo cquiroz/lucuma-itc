@@ -4,8 +4,8 @@
 package grackle
 
 import cats.Eq
-import io.circe._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.syntax.*
 
 /** A problem, to be reported back to the user. */
 final case class Problem(

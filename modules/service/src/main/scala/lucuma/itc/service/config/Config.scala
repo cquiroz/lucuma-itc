@@ -3,8 +3,8 @@
 
 package lucuma.itc.service.config
 
-import cats.syntax.all._
-import ciris._
+import cats.syntax.all.*
+import ciris.*
 import org.http4s.Uri
 
 /**

@@ -3,7 +3,7 @@
 
 package lucuma.itc.syntax
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 trait FiniteDurationSyntax:
   extension (self: FiniteDuration)

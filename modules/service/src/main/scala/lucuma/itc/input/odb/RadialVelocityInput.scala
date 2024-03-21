@@ -5,10 +5,10 @@ package lucuma.odb.graphql
 package input
 
 import cats.data.OptionT
-import cats.syntax.all._
+import cats.syntax.all.*
 import grackle.Result
 import lucuma.core.math.RadialVelocity
-import lucuma.odb.graphql.binding._
+import lucuma.odb.graphql.binding.*
 
 object RadialVelocityInput {
 
@@ -26,17 +26,19 @@ object RadialVelocityInput {
         val rMetersPerSecondʹ      =
           OptionT(rMetersPerSecond).semiflatMap(resultFromMetersPerSecond).value
         val rKilometersPerSecondʹ  =
-          OptionT(rKilometersPerSecond).semiflatMap(resultFromKilometersPerSecond).value
-        (rCentimetersPerSecondʹ, rMetersPerSecondʹ, rKilometersPerSecondʹ).parTupled.flatMap {
-          case (centimetersPerSecond, metersPerSecond, kilometersPerSecond) =>
-            List(centimetersPerSecond, metersPerSecond, kilometersPerSecond).flatten match {
-              case List(r) => Result(r)
-              case other   =>
-                Result.failure(
-                  s"Expected exactly one RadialVelocity representation; found ${other.length}."
-                )
+          OptionT(rKilometersPerSecond)
+            .semiflatMap(resultFromKilometersPerSecond)
+            .value(rCentimetersPerSecondʹ, rMetersPerSecondʹ, rKilometersPerSecondʹ)
+            .parTupled
+            .flatMap { case (centimetersPerSecond, metersPerSecond, kilometersPerSecond) =>
+              List(centimetersPerSecond, metersPerSecond, kilometersPerSecond).flatten match {
+                case List(r) => Result(r)
+                case other   =>
+                  Result.failure(
+                    s"Expected exactly one RadialVelocity representation; found ${other.length}."
+                  )
+              }
             }
-        }
     }
 
   def resultFromCentimetersPerSecond(cmps: BigDecimal): Result[RadialVelocity] =
