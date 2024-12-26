@@ -74,7 +74,8 @@ class WiringSuite extends ClientSuite {
   val selected = IntegrationTime(
     TimeSpan.FromString.getOption("PT1S").get,
     PosInt.unsafeFrom(10),
-    SignalToNoise.unsafeFromBigDecimalExact(BigDecimal(10.0))
+    SignalToNoise.unsafeFromBigDecimalExact(BigDecimal(10.0)),
+    SignalToNoise.unsafeFromBigDecimalExact(BigDecimal(11.0))
   )
 
   test("ItcClient spectroscopy basic wiring and sanity check") {

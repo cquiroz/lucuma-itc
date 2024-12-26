@@ -3,6 +3,7 @@
 
 package lucuma.itc
 
+import cats.Order
 import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import io.circe.Encoder
@@ -35,6 +36,7 @@ object AsterismIntegrationTimeOutcomes extends NewType[NonEmptyChain[TargetInteg
       a.value
         .traverse(_.value.toOption)
         .map: nec =>
+          given Order[TargetIntegrationTime] = TargetIntegrationTime.exposureTimeOrder
           AsterismIntegrationTimes(Zipper.of(nec.head, nec.tail.toList*).focusMin)
         .toRight(collectErrors.get) // Should be safe to call get here, we know there are errors.
 
@@ -49,6 +51,7 @@ object AsterismIntegrationTimeOutcomes extends NewType[NonEmptyChain[TargetInteg
     def collectErrors: Option[NonEmptyChain[(Error, Int)]] =
       NonEmptyChain.fromChain:
         a.value.map(_.value).zipWithIndex.collect { case (Left(e), i) => (e, i) }
+
 type AsterismIntegrationTimeOutcomes = AsterismIntegrationTimeOutcomes.Type
 
 object TargetGraphsOutcome extends NewType[Either[Error, TargetGraphsResult]]:
@@ -93,6 +96,7 @@ object AsterismTimeAndGraphs extends NewType[NonEmptyChain[TargetTimeAndGraphsOu
       a.value
         .traverse(_.value.toOption)
         .map: nec =>
+          given Order[TargetTimeAndGraphs] = TargetTimeAndGraphs.integrationTimeOrder
           Zipper.of(nec.head, nec.tail.toList*).focusMin
 
     // The brightest target is the one with the shortest exposure time.

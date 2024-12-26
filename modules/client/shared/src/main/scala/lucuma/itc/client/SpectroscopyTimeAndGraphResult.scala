@@ -26,7 +26,8 @@ case class TargetTimeAndGraphsResult(
   export graphs.*
 
 object TargetTimeAndGraphsResult:
-  given Order[TargetTimeAndGraphsResult] = Order.by(_.integrationTime)
+  given Order[TargetIntegrationTime]                         = TargetIntegrationTime.exposureTimeOrder
+  val integrationTimeOrder: Order[TargetTimeAndGraphsResult] = Order.by(_.integrationTime)
 
 object TargetTimeAndGraphsResultOutcome extends NewType[Either[Error, TargetTimeAndGraphsResult]]:
   given Decoder[TargetTimeAndGraphsResultOutcome] =
@@ -43,6 +44,7 @@ object AsterismTimeAndGraphsResult extends NewType[NonEmptyChain[TargetTimeAndGr
       a.value
         .traverse(_.value.toOption)
         .map: nec =>
+          given Order[TargetTimeAndGraphsResult] = TargetTimeAndGraphsResult.integrationTimeOrder
           Zipper.of(nec.head, nec.tail.toList*).focusMin
 
     // The brightest target is the one with the shortest exposure time.

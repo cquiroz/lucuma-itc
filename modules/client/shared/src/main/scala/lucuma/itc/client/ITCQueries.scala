@@ -25,7 +25,8 @@ object SpectroscopyIntegrationTime extends GraphQLOperation[Unit] {
           microseconds
         }
         exposureCount
-        signalToNoise
+        totalSignalToNoise
+        singleSignalToNoise
       }
 
       fragment TargetIntegrationTimeFields on TargetIntegrationTime {
@@ -87,7 +88,8 @@ object ImagingIntegrationTime extends GraphQLOperation[Unit] {
           microseconds
         }
         exposureCount
-        signalToNoise
+        totalSignalToNoise
+        singleSignalToNoise
       }
 
       fragment TargetIntegrationTimeFields on TargetIntegrationTime {
@@ -237,7 +239,8 @@ object SpectroscopyIntegrationTimeAndGraphsQuery extends GraphQLOperation[Unit] 
           microseconds
         }
         exposureCount
-        signalToNoise
+        totalSignalToNoise
+        singleSignalToNoise
       }
 
       fragment TargetIntegrationTimeFields on TargetIntegrationTime {

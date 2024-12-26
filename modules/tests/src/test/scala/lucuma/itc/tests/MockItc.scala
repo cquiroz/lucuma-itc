@@ -37,7 +37,11 @@ object MockItc extends Itc[IO]:
   ): IO[TargetIntegrationTime] =
     TargetIntegrationTime(
       Zipper.one:
-        IntegrationTime(TimeSpan.fromSeconds(1).get, 10.refined, SignalToNoise.fromInt(10).get)
+        IntegrationTime(TimeSpan.fromSeconds(1).get,
+                        10.refined,
+                        SignalToNoise.fromInt(10).get,
+                        SignalToNoise.fromInt(11).get
+        )
       ,
       Band.R.asLeft
     ).pure[IO]
@@ -96,8 +100,16 @@ object MockImagingItc extends Itc[IO]:
   ): IO[TargetIntegrationTime] =
     TargetIntegrationTime(
       Zipper.of(
-        IntegrationTime(TimeSpan.fromSeconds(1).get, 10.refined, SignalToNoise.fromInt(10).get),
-        IntegrationTime(TimeSpan.fromSeconds(2).get, 5.refined, SignalToNoise.fromInt(20).get)
+        IntegrationTime(TimeSpan.fromSeconds(1).get,
+                        10.refined,
+                        SignalToNoise.fromInt(10).get,
+                        SignalToNoise.fromInt(20).get
+        ),
+        IntegrationTime(TimeSpan.fromSeconds(2).get,
+                        5.refined,
+                        SignalToNoise.fromInt(20).get,
+                        SignalToNoise.fromInt(21).get
+        )
       ),
       Band.R.asLeft
     ).pure[IO]
@@ -156,7 +168,11 @@ object EmissionLineMockItc extends Itc[IO]:
   ): IO[TargetIntegrationTime] =
     TargetIntegrationTime(
       Zipper.one:
-        IntegrationTime(TimeSpan.fromSeconds(1).get, 10.refined, SignalToNoise.fromInt(10).get)
+        IntegrationTime(TimeSpan.fromSeconds(1).get,
+                        10.refined,
+                        SignalToNoise.fromInt(10).get,
+                        SignalToNoise.fromInt(11).get
+        )
       ,
       Wavelength.unsafeFromIntPicometers(650000).asRight
     ).pure[IO]

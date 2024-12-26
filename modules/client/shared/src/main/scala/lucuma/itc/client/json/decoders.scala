@@ -53,22 +53,24 @@ object decoders:
 
   given Decoder[IntegrationTime] = c =>
     for {
-      t <- c.downField("exposureTime")
-             .downField("microseconds")
-             .as[Long]
-             .flatMap(l =>
-               TimeSpan
-                 .fromMicroseconds(l)
-                 .toRight(
-                   DecodingFailure(s"Negative exposure time is not supported: $l", c.history)
-                 )
-             )
-      n <- c.downField("exposureCount")
-             .as[Int]
-             .flatMap(n => PosInt.from(n).leftMap(m => DecodingFailure(m, c.history)))
-      s <- c.downField("signalToNoise")
-             .as[SignalToNoise]
-    } yield IntegrationTime(t, n, s)
+      t  <- c.downField("exposureTime")
+              .downField("microseconds")
+              .as[Long]
+              .flatMap(l =>
+                TimeSpan
+                  .fromMicroseconds(l)
+                  .toRight(
+                    DecodingFailure(s"Negative exposure time is not supported: $l", c.history)
+                  )
+              )
+      n  <- c.downField("exposureCount")
+              .as[Int]
+              .flatMap(n => PosInt.from(n).leftMap(m => DecodingFailure(m, c.history)))
+      ts <- c.downField("totalSignalToNoise")
+              .as[SignalToNoise]
+      ss <- c.downField("singleSignalToNoise")
+              .as[SignalToNoise]
+    } yield IntegrationTime(t, n, ts, ss)
 
   given Decoder[TargetIntegrationTime] = c =>
     for

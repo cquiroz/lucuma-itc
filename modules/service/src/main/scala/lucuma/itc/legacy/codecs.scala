@@ -438,10 +438,11 @@ given Decoder[GraphsRemoteResult] = (c: HCursor) =>
   yield GraphsRemoteResult(ccd, graphs)
 
 given Decoder[ExposureCalculation] = (c: HCursor) =>
+  println(c.value)
   for
-    sn    <- // We attempt decoding and validating S/N first
+    tsn   <- // We attempt decoding and validating S/N first
       c
-        .downField("signalToNoise")
+        .downField("totalSignalToNoise")
         .as[BigDecimal]
         .flatMap: s =>
           SignalToNoise.FromBigDecimalRounding
@@ -450,7 +451,20 @@ given Decoder[ExposureCalculation] = (c: HCursor) =>
             .toRight:
               DecodingFailure(
                 s"Invalid S/N value computed: $s",
-                c.downField("signalToNoise").history
+                c.downField("totalSignalToNoise").history
+              )
+    ssn   <- // We attempt decoding and validating S/N first
+      c
+        .downField("singleSignalToNoise")
+        .as[BigDecimal]
+        .flatMap: s =>
+          SignalToNoise.FromBigDecimalRounding
+            .getOption(s)
+            .filter(_.toBigDecimal > BigDecimal(0))
+            .toRight:
+              DecodingFailure(
+                s"Invalid S/N value computed: $s",
+                c.downField("singleSignalToNoise").history
               )
     time  <- c.downField("exposureTime").as[Double]
     count <-
@@ -459,7 +473,7 @@ given Decoder[ExposureCalculation] = (c: HCursor) =>
         .as[Int]
         .flatMap:
           refineV[Positive](_).leftMap(e => DecodingFailure(e, c.downField("exposures").history))
-  yield ExposureCalculation(time, count, sn)
+  yield ExposureCalculation(time, count, tsn, ssn)
 
 given Decoder[IntegrationTimeRemoteResult] = (c: HCursor) =>
   val spec: Option[Decoder.Result[IntegrationTimeRemoteResult]] =

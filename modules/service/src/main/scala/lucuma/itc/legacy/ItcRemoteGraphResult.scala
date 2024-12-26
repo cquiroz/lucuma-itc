@@ -19,9 +19,10 @@ case class GraphsRemoteResult(
 }
 
 case class ExposureCalculation(
-  exposureTime:  Double,
-  exposureCount: PosInt,
-  signalToNoise: SignalToNoise
+  exposureTime:        Double,
+  exposureCount:       PosInt,
+  totalSignalToNoise:  SignalToNoise,
+  singleSignalToNoise: SignalToNoise
 )
 
 case class IntegrationTimeRemoteResult(exposureCalculation: NonEmptyChain[ExposureCalculation])

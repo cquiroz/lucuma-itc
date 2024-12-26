@@ -16,4 +16,6 @@ case class TargetTimeAndGraphs(
       Encoder.AsObject
 
 object TargetTimeAndGraphs:
-  given Order[TargetTimeAndGraphs] = Order.by(_.integrationTime)
+  val integrationTimeOrder: Order[TargetTimeAndGraphs] =
+    given Order[TargetIntegrationTime] = TargetIntegrationTime.exposureTimeOrder
+    Order.by(_.integrationTime)

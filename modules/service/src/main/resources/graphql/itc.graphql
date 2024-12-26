@@ -6395,7 +6395,8 @@ type ItcResult {
   targetId:      TargetId!
   exposureTime:  TimeSpan!
   exposureCount: NonNegInt!
-  signalToNoise: SignalToNoise!
+  totalSignalToNoise: SignalToNoise!
+  singleSignalToNoise: SignalToNoise!
 }
 
 
@@ -10216,7 +10217,7 @@ scalar Long
 
 type Query {
   versions: ItcVersions
-  
+
   # Given an instrument and a spectroscopy mode,
   # return the integration time and the estimated S/N for the given targets.
   spectroscopyIntegrationTime(
@@ -10475,7 +10476,8 @@ type IntegrationTime {
   exposureCount: PosInt!
 
   # Signal/Noise ratio
-  signalToNoise: SignalToNoise!
+  totalSignalToNoise: SignalToNoise!
+  singleSignalToNoise: SignalToNoise!
 }
 
 type IntegrationTimeCalculationResult {

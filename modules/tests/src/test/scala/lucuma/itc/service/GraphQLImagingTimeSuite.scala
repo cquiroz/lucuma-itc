@@ -104,14 +104,16 @@ class GraphQLImagingTimeSuite extends GraphImagingQLSuite {
                 exposureTime {
                   seconds
                 }
-                signalToNoise
+                totalSignalToNoise
+                singleSignalToNoise
               }
               selected {
                 exposureCount
                 exposureTime {
                   seconds
                 }
-                signalToNoise
+                totalSignalToNoise
+                singleSignalToNoise
               }
             }
           }
@@ -134,20 +136,23 @@ class GraphQLImagingTimeSuite extends GraphImagingQLSuite {
                   "exposureTime" : {
                     "seconds" : 1.000000
                   },
-                  "signalToNoise": 10.000
+                  "totalSignalToNoise": 10.000,
+                  "singleSignalToNoise": 20.000
                 }, {
                   "exposureCount" : 5,
                   "exposureTime" : {
                     "seconds" : 2.000000
                   },
-                  "signalToNoise": 20.000
+                  "totalSignalToNoise": 20.000,
+                  "singleSignalToNoise": 21.000
                 }],
                 "selected" : {
                   "exposureCount" : 5,
                   "exposureTime" : {
                     "seconds" : 2.000000
                   },
-                  "signalToNoise": 20.000
+                  "totalSignalToNoise": 20.000,
+                  "singleSignalToNoise": 21.000
                 }
               }
             }

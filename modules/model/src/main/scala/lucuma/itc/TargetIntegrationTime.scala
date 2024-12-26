@@ -3,7 +3,9 @@
 
 package lucuma.itc
 
+import cats.Eq
 import cats.Order
+import cats.derived.*
 import io.circe.Encoder
 import io.circe.Json
 import io.circe.syntax.*
@@ -16,7 +18,7 @@ import lucuma.itc.encoders.given
 case class TargetIntegrationTime(
   times:      Zipper[IntegrationTime],
   bandOrLine: Either[Band, Wavelength]
-):
+) derives Eq:
   def focusIndex(index: Int): Option[TargetIntegrationTime] =
     times
       .focusIndex(index)
@@ -32,4 +34,6 @@ object TargetIntegrationTime:
       )
       .deepMerge(t.times.asJson)
 
-  given Order[TargetIntegrationTime] = Order.by(_.times.focus)
+  val exposureTimeOrder: Order[TargetIntegrationTime] =
+    given Order[IntegrationTime] = IntegrationTime.exposureTimeOrder
+    Order.by(_.times.focus)
