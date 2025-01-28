@@ -74,7 +74,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
             mode {
               ... on SpectroscopyMode {
                 instrument
-                resolution
                 params {
                   ... on GmosNITCParams {
                     grating
@@ -103,7 +102,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
             "spectroscopyIntegrationTime" : {
               "mode" : {
                 "instrument" : "GMOS_NORTH",
-                "resolution" : 970,
                 "params": {
                   "grating": "B1200_G5301"
                 },
@@ -190,7 +188,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
               mode {
                 ... on SpectroscopyMode {
                   instrument
-                  resolution
                   params {
                     ... on GmosSITCParams {
                       grating
@@ -218,7 +215,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
             "spectroscopyIntegrationTime" : {
                 "mode" : {
                   "instrument" : "GMOS_SOUTH",
-                  "resolution" : 970,
                   "params": {
                     "grating": "B1200_G5321"
                   },
@@ -399,7 +395,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
                 mode {
                   ... on SpectroscopyMode {
                     instrument
-                    resolution
                     params {
                       ... on GmosNITCParams {
                         grating
@@ -428,7 +423,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
               {
                 "mode" : {
                   "instrument" : "GMOS_NORTH",
-                  "resolution" : 970,
                   "params": {
                     "grating": "B1200_G5301"
                   },
@@ -514,7 +508,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
               mode {
                 ... on SpectroscopyMode {
                   instrument
-                  resolution
                   params {
                     ... on GmosNITCParams {
                       grating
@@ -1302,7 +1295,7 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
                 radialVelocity: {
                   kilometersPerSecond: 1000
                 }
-              }              
+              }
             ],
             constraints: {
               imageQuality: POINT_THREE,
@@ -1332,7 +1325,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
             mode {
               ... on SpectroscopyMode {
                 instrument
-                resolution
                 params {
                   ... on GmosNITCParams {
                     grating
@@ -1364,7 +1356,6 @@ class GraphQLSpectroscopyTimeSuite extends GraphQLSuite {
             "spectroscopyIntegrationTime" : {
               "mode" : {
                 "instrument" : "GMOS_NORTH",
-                "resolution" : 9703,
                 "params": {
                   "grating": "B1200_G5301"
                 },

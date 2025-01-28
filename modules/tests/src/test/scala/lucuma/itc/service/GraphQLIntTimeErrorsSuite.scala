@@ -69,7 +69,6 @@ class GraphQLIntTimeErrorsSuite extends FailingCalculationSuite {
             mode {
               ... on SpectroscopyMode {
                 instrument
-                resolution
                 params {
                   ... on GmosNITCParams {
                     grating
@@ -108,7 +107,6 @@ class GraphQLIntTimeErrorsSuite extends FailingCalculationSuite {
             "spectroscopyIntegrationTime" : {
               "mode" : {
                 "instrument" : "GMOS_NORTH",
-                "resolution" : 970,
                 "params" : {
                   "grating" : "B1200_G5301"
                 },

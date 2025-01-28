@@ -76,6 +76,13 @@ jobs:
         if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-22.04'
         run: sbt '++ ${{ matrix.scala }}' doc
 
+      - name: Validate GraphQL schema changes
+        if: github.event_name == 'pull_request'
+        uses: kamilkisiela/graphql-inspector@master
+        with:
+          schema: 'main:modules/service/src/main/resources/graphql/itc.graphql'
+          approve-label: expected-breaking-change
+
       - name: Aggregate coverage reports
         run: sbt '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 

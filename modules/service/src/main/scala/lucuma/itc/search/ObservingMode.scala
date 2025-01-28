@@ -49,8 +49,6 @@ object ObservingMode {
 
   sealed trait SpectroscopyMode extends ObservingMode derives Hash {
     def centralWavelength: Wavelength
-    def resolution: Rational
-    def coverage: Interval[Wavelength]
   }
 
   object SpectroscopyMode {
@@ -59,11 +57,12 @@ object ObservingMode {
       case gs: GmosSouth => gs.asJson
     }
 
-    def unapply(spectroscopyMode: SpectroscopyMode): (Wavelength, Rational, Interval[Wavelength]) =
-      (spectroscopyMode.centralWavelength, spectroscopyMode.resolution, spectroscopyMode.coverage)
-
     sealed trait GmosSpectroscopy extends SpectroscopyMode derives Hash {
       def isIfu: Boolean
+
+      def resolution: Rational
+
+      def coverage: Interval[Wavelength]
 
       def analysisMethod: ItcObservationDetails.AnalysisMethod =
         if (isIfu)
@@ -103,7 +102,6 @@ object ObservingMode {
       given Encoder[GmosNorth] = a =>
         Json.obj(
           ("instrument", Json.fromString(a.instrument.longName.toUpperCase.replace(" ", "_"))),
-          ("resolution", Json.fromInt(a.resolution.toInt)),
           ("params", GmosNSpectroscopyParams(a.disperser, a.fpu, a.filter).asJson),
           ("centralWavelength", a.centralWavelength.asJson)
         )
@@ -134,7 +132,6 @@ object ObservingMode {
       given Encoder[GmosSouth] = a =>
         Json.obj(
           ("instrument", Json.fromString(a.instrument.longName.toUpperCase.replace(" ", "_"))),
-          ("resolution", Json.fromInt(a.resolution.toInt)),
           ("params", GmosSSpectroscopyParams(a.disperser, a.fpu, a.filter).asJson),
           ("centralWavelength", a.centralWavelength.asJson)
         )

@@ -10216,7 +10216,7 @@ scalar Long
 
 type Query {
   versions: ItcVersions
-  
+
   # Given an instrument and a spectroscopy mode,
   # return the integration time and the estimated S/N for the given targets.
   spectroscopyIntegrationTime(
@@ -10246,9 +10246,6 @@ type Query {
 type ObservingModeSpectroscopy {
   # Wavelength in appropriate units
   wavelength: Wavelength!
-
-  # Resolution
-  resolution: BigDecimal!
 
   # params
   params: InstrumentITCParams!
@@ -10537,9 +10534,6 @@ type ImagingMode implements ITCObservingMode {
 type SpectroscopyMode implements ITCObservingMode {
   # Wavelength in appropriate units
   centralWavelength: Wavelength!
-
-  # Resolution
-  resolution: BigDecimal!
 
   # params
   params: InstrumentITCParams!

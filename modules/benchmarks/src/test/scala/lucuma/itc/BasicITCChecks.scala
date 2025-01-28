@@ -77,7 +77,6 @@ class BasicITCChecks extends Simulation {
             results {
                 mode {
                   instrument
-                  resolution
                   params {
                     ... on GmosNITCParams {
                       grating
@@ -172,7 +171,6 @@ class BasicITCChecks extends Simulation {
             results {
                 mode {
                   instrument
-                  resolution
                   wavelength {
                     nanometers
                   }

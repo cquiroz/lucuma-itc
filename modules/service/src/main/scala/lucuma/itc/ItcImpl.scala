@@ -47,7 +47,8 @@ object ItcImpl {
       ): F[TargetIntegrationTime] =
         T.span("calculate-integration-time"):
           observingMode match
-            case s @ ObservingMode.SpectroscopyMode(_, _, _) =>
+            case s @ (ObservingMode.SpectroscopyMode.GmosNorth(_, _, _, _, _, _) |
+                ObservingMode.SpectroscopyMode.GmosSouth(_, _, _, _, _, _)) =>
               spectroscopyIntegrationTime(target, atWavelength, s, constraints, signalToNoise)
             case i @ (
                   ObservingMode.ImagingMode.GmosNorth(_, _) |
@@ -64,7 +65,8 @@ object ItcImpl {
         exposureCount: PosInt
       ): F[TargetGraphsCalcResult] =
         observingMode match
-          case s @ ObservingMode.SpectroscopyMode(_, _, _) =>
+          case s @ (ObservingMode.SpectroscopyMode.GmosNorth(_, _, _, _, _, _) |
+              ObservingMode.SpectroscopyMode.GmosSouth(_, _, _, _, _, _)) =>
             spectroscopyGraphs(
               target,
               atWavelength,

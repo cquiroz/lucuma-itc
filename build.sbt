@@ -37,7 +37,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 ThisBuild / scalaVersion        := "3.6.3"
 ThisBuild / crossScalaVersions  := Seq("3.6.3")
-ThisBuild / tlBaseVersion       := "0.25"
+ThisBuild / tlBaseVersion       := "0.26"
 ThisBuild / tlCiReleaseBranches := Seq("master")
 ThisBuild / scalacOptions ++= Seq("-Xmax-inlines", "50") // Hash derivation fails with default of 32
 
@@ -70,6 +70,16 @@ ThisBuild / watchOnTermination := { (action, cmd, times, state) =>
     Project.extract(state).runTask(projRef / reStop, state)._1
   }
 }
+
+ThisBuild / githubWorkflowBuild +=
+  WorkflowStep.Use(
+    UseRef.Public("kamilkisiela", "graphql-inspector", "master"),
+    name = Some("Validate GraphQL schema changes"),
+    params = Map("schema"        -> "main:modules/service/src/main/resources/graphql/itc.graphql",
+                 "approve-label" -> "expected-breaking-change"
+    ),
+    cond = Some("github.event_name == 'pull_request'")
+  )
 
 // Basic model classes
 lazy val model = crossProject(JVMPlatform, JSPlatform)
